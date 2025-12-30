@@ -1038,6 +1038,34 @@
       transform: none;
     }
 
+    .btn-limpar-carrinho {
+      background: transparent;
+      color: #ef4444;
+      border: 2px solid #ef4444;
+      padding: 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      width: 100%;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-limpar-carrinho:hover {
+      background: #ef4444;
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-limpar-carrinho:active {
+      transform: translateY(0);
+    }
+
     .empty-cart {
       text-align: center;
       padding: 2rem 1rem;
@@ -1311,7 +1339,7 @@
               <div class="total-label">
                 Total de itens: <span id="totalItems">0</span>
               </div>
-              <button class="btn-secondary" onclick="app.limparCarrinho()" style="width: 100%; margin-bottom: 0.75rem; background: #ef4444; color: white; border: none;">
+              <button class="btn-limpar-carrinho" onclick="app.limparCarrinho()">
                 <i class="fas fa-trash-alt"></i>
                 Limpar Carrinho
               </button>
