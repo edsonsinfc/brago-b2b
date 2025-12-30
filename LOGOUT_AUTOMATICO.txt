@@ -1,0 +1,146 @@
+═══════════════════════════════════════════════════════════════════════════════
+✅ LOGOUT AUTOMÁTICO IMPLEMENTADO
+═══════════════════════════════════════════════════════════════════════════════
+
+🔒 SISTEMA DE INVALIDAÇÃO AUTOMÁTICA DE TOKEN
+
+Quando o ADMIN altera informações de um usuário, o sistema agora FORÇA o logout
+automático desse usuário, garantindo que ele faça login novamente com as
+informações atualizadas.
+
+═══════════════════════════════════════════════════════════════════════════════
+📋 COMO FUNCIONA
+═══════════════════════════════════════════════════════════════════════════════
+
+1. ADMIN FAZ ALTERAÇÃO
+   • Admin acessa "Gerenciar Usuários"
+   • Modifica nome, email, perfil, equipes, categoria, etc
+   • Clica em "Salvar"
+   • Campo `updated_at` é atualizado automaticamente no banco
+
+2. VALIDAÇÃO NO MIDDLEWARE
+   • Toda requisição API passa pelo middleware de autenticação
+   • Middleware compara:
+     - Data de criação do token JWT (payload.iat)
+     - Data de atualização do usuário (updated_at no banco)
+   
+   • Se updated_at > token criado:
+     ✅ Token INVALIDADO
+     🔒 Usuário é deslogado automaticamente
+
+3. LOGOUT FORÇADO
+   • Sistema retorna status 401 com flag requiresRelogin: true
+   • Frontend detecta a flag
+   • Exibe alerta: "Suas informações foram atualizadas pelo administrador"
+   • Remove token do localStorage
+   • Redireciona para tela de login
+
+4. NOVO LOGIN
+   • Usuário faz login novamente
+   • Novo token é criado com:
+     ✅ Equipes atualizadas
+     ✅ Perfil atualizado  
+     ✅ Categoria atualizada
+     ✅ Todas as informações sincronizadas
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 CENÁRIOS DE INVALIDAÇÃO
+═══════════════════════════════════════════════════════════════════════════════
+
+O token é invalidado quando o ADMIN altera:
+
+✅ Equipes do usuário (principal ou adicionais)
+✅ Perfil (solicitante → gestor, etc)
+✅ Categoria de acesso (facility, manipulação, ambas)
+✅ Nome ou email
+✅ Qualquer outro campo que atualize `updated_at`
+
+═══════════════════════════════════════════════════════════════════════════════
+💡 EXEMPLO PRÁTICO
+═══════════════════════════════════════════════════════════════════════════════
+
+SITUAÇÃO:
+  • Isabella está logada e fazendo pedidos pela equipe CD (token antigo)
+  • Admin muda equipe dela de CD para IGUATEMI
+  • Campo updated_at é atualizado: 2025-12-26 18:17:14
+
+RESULTADO:
+  • Próxima requisição de Isabella (ex: carregar produtos)
+  • Middleware detecta:
+    - Token criado em: 2025-12-26 18:08:04
+    - Usuário atualizado em: 2025-12-26 18:17:14
+    - 18:17:14 > 18:08:04 = TRUE
+  
+  • Sistema responde 401:
+    {
+      "error": "Suas informações foram atualizadas pelo administrador...",
+      "requiresRelogin": true
+    }
+  
+  • Frontend mostra alerta e redireciona para login
+  • Isabella faz login novamente
+  • Novo token tem equipe_id = 28 (IGUATEMI) ✅
+  • Agora ela cria pedidos pela equipe correta!
+
+═══════════════════════════════════════════════════════════════════════════════
+🔍 LOGS DO SISTEMA
+═══════════════════════════════════════════════════════════════════════════════
+
+Quando um token é invalidado, você verá no terminal:
+
+  🔒 Token invalidado para usuário 5 (Isabella Vitoria Peixoto Caixeta)
+     Token criado em: 2025-12-26T21:08:04.000Z
+     Usuário atualizado em: 2025-12-26T21:17:14.000Z
+     Motivo: Administrador alterou dados do usuário
+
+═══════════════════════════════════════════════════════════════════════════════
+📊 VALIDAÇÕES ADICIONAIS
+═══════════════════════════════════════════════════════════════════════════════
+
+Além do updated_at, o sistema também valida:
+
+1. CATEGORIA DE ACESSO (Solicitantes)
+   • Se categoria mudou no banco vs token
+   • Força relogin para atualizar filtro de produtos
+
+2. EQUIPE PRINCIPAL (equipe_id)
+   • Se equipe_id mudou no banco vs token
+   • Garante que solicitante vê equipe correta
+
+3. USUÁRIO DELETADO
+   • Se usuário não existe mais no banco
+   • Retorna erro "Usuário não encontrado"
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ BENEFÍCIOS
+═══════════════════════════════════════════════════════════════════════════════
+
+✓ Sincronização Imediata: Mudanças aplicadas na próxima requisição
+✓ Segurança: Tokens antigos não funcionam após alterações
+✓ Transparente: Usuário apenas precisa fazer login novamente
+✓ Sem Cache: Garante que dados sempre estão atualizados
+✓ Rastreável: Logs mostram quando e por que tokens foram invalidados
+
+═══════════════════════════════════════════════════════════════════════════════
+🚨 NOTAS IMPORTANTES
+═══════════════════════════════════════════════════════════════════════════════
+
+• O logout é AUTOMÁTICO - usuário não precisa fazer manualmente
+• Funciona em TODAS as telas (equipe.html, galeria.html, gestor.html)
+• Mensagem de alerta explica o motivo do logout
+• Admin NÃO é afetado quando altera outros usuários
+• Tokens continuam expirando em 8 horas normalmente
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎯 TESTE O SISTEMA:
+
+1. Faça login como Isabella
+2. Vá para equipe.html
+3. Em outra aba, faça login como admin
+4. Mude a equipe da Isabella
+5. Volte na aba da Isabella
+6. Clique em qualquer botão ou recarregue a página
+7. Ela será deslogada automaticamente! ✅
+
+═══════════════════════════════════════════════════════════════════════════════

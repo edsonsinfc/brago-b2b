@@ -1,0 +1,74 @@
+﻿require('dotenv').config();
+const path = require('path');
+const express = require('express');
+const cors = require('cors');
+const morgan = require('morgan');
+
+const { router: authRoutes } = require('./routes/auth');
+const { router: equipesRoutes } = require('./routes/equipes');
+const { router: pedidosRoutes } = require('./routes/pedidos');
+const { router: produtosRoutes } = require('./routes/produtos');
+const { router: notificacoesRoutes } = require('./routes/notificacoes');
+const { router: usuariosRoutes } = require('./routes/usuarios');
+const { router: uploadRoutes } = require('./routes/upload');
+const { router: orcamentosRoutes } = require('./routes/orcamentos');
+const passwordResetRoutes = require('./routes/password-reset');
+const vendedorRoutes = require('./routes/vendedor');
+
+const app = express();
+
+const PORT = process.env.PORT || 3000;
+const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
+
+app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
+app.use(express.json());
+app.use(morgan('dev'));
+
+// Middleware de segurança para páginas protegidas
+app.use((req, res, next) => {
+  // Páginas que requerem autenticação
+  const protectedPages = ['/gestor.html', '/equipe.html', '/galeria.html', '/vendedor.html'];
+  
+  if (protectedPages.some(page => req.path === page)) {
+    // Impedir cache dessas páginas
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  
+  next();
+});
+
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
+app.get('/health', (req, res) => res.json({ ok: true, time: new Date().toISOString() }));
+
+// Rota raiz redireciona para login
+app.get('/', (req, res) => res.redirect('/login.html'));
+
+app.use('/api/auth', authRoutes);
+app.use('/api/password', passwordResetRoutes);
+app.use('/api/equipes', equipesRoutes);
+app.use('/api/pedidos', pedidosRoutes);
+app.use('/api/produtos', produtosRoutes);
+app.use('/api/notificacoes', notificacoesRoutes);
+app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/orcamentos', orcamentosRoutes);
+app.use('/api/vendedor', vendedorRoutes);
+
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Erro interno do servidor' });
+});
+
+// Tratamento de erros não capturados
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+app.listen(PORT, () => console.log(`🚀 B2B Brago Distribuidora rodando em http://localhost:${PORT}`));

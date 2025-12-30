@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BRAGO Distribuidora - Login</title>
+  
+  <!-- Preload da imagem de fundo -->
+  <link rel="preload" as="image" href="/images/homem-e-mulher-fazendo-compras-no-supermercado.jpg" fetchpriority="high">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary-blue: #0033cc;
+      --orange: #ff6600;
+      --white: #ffffff;
+      --gray-light: #f5f5f5;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    body { 
+      font-family: 'Inter', sans-serif; 
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Background com imagem e overlay laranja */
+    .background-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 75%;
+      height: 100%;
+      z-index: 0;
+      background: #f5f5f5;
+      /* Fallback enquanto carrega */
+      background-image: url('/images/homem-e-mulher-fazendo-compras-no-supermercado.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .background-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.8s ease-in;
+      display: none; /* Esconder img tag, usar CSS background */
+      animation: zoomIn 20s ease-in-out infinite alternate;
+    }
+
+    @keyframes zoomIn {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.05); }
+    }
+
+    .background-image.loaded {
+      opacity: 1;
+    }
+
+    .background-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(255, 102, 0, 0.45) 0%, rgba(255, 140, 0, 0.35) 100%);
+      pointer-events: none;
+    }
+
+    /* Texto sobre a imagem */
+    .hero-text {
+      position: absolute;
+      top: 50%;
+      left: 10%;
+      transform: translateY(-50%);
+      color: white;
+      z-index: 2;
+      max-width: 500px;
+    }
+
+    .hero-text h1 {
+      font-size: 4rem;
+      font-weight: 300;
+      line-height: 1.2;
+      margin-bottom: 0;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .hero-text h1 .highlight {
+      font-weight: 800;
+      font-style: italic;
+    }
+
+    /* Container do lado direito */
+    .login-container {
+      position: fixed;
+      right: 0;
+      top: 0;
+      width: 25%;
+      height: 100%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-left: 0;
+      z-index: 1;
+    }
+
+    /* Card de login azul com degradê e animação */
+    .login-card {
+      background: linear-gradient(135deg, #0033cc 0%, #0052ff 50%, #0066ff 100%);
+      border-radius: 40px;
+      padding: 60px 50px;
+      width: 90%;
+      max-width: 450px;
+      box-shadow: 
+        0 25px 70px rgba(0, 51, 204, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 10;
+      animation: slideInRight 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform: translateX(-120px);
+    }
+
+    @keyframes slideInRight {
+      0% {
+        opacity: 0;
+        transform: translateX(100px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(-120px);
+      }
+    }
+
+    .logo-container {
+      margin-bottom: 50px;
+      text-align: center;
+      animation: fadeInDown 0.6s ease-out 0.2s both;
+      position: relative;
+    }
+
+    /* Botão voltar */
+    .btn-voltar {
+      position: absolute;
+      left: -45px;
+      top: 0;
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      font-size: 1.2rem;
+    }
+
+    .btn-voltar:hover {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: var(--orange);
+      transform: translateX(-3px);
+    }
+    
+    /* Ajuste do botão voltar em telas menores */
+    @media (max-width: 1200px) {
+      .btn-voltar {
+        left: 10px;
+        top: -50px;
+      }
+    }
+
+    @keyframes fadeInDown {
+      0% {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .logo-container img {
+      max-width: 220px;
+      height: auto;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
+    }
+
+    label { 
+      display: block; 
+      margin-top: 1rem; 
+      margin-bottom: 0.5rem;
+      font-weight: 500; 
+      color: white;
+      font-size: 0.9rem;
+      align-self: flex-start;
+      width: 100%;
+    }
+
+    input { 
+      width: 100%; 
+      padding: 0.85rem 1rem; 
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      border-radius: 10px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+    }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--orange);
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.2);
+    }
+
+    .form-group {
+      width: 100%;
+      margin-bottom: 1rem;
+      animation: fadeInUp 0.6s ease-out both;
+      position: relative;
+    }
+
+    .form-group:nth-child(1) { animation-delay: 0.3s; }
+    .form-group:nth-child(2) { animation-delay: 0.4s; }
+
+    /* Botão de mostrar/ocultar senha */
+    .password-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 5px;
+      transition: color 0.2s ease;
+      margin-top: 10px;
+    }
+
+    .password-toggle:hover {
+      color: white;
+    }
+
+    .password-toggle:focus {
+      outline: none;
+    }
+
+    input[type="password"],
+    input[type="text"] {
+      padding-right: 45px;
+    }
+
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 15px 0 10px 0;
+      width: 100%;
+      animation: fadeInUp 0.6s ease-out 0.45s both;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+      cursor: pointer;
+      accent-color: var(--orange);
+    }
+
+    .checkbox-group label {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.85rem;
+      font-weight: 400;
+      cursor: pointer;
+    }
+
+    /* Botão laranja com animação e efeito ripple */
+    .btn-entrar {
+      width: 100%;
+      padding: 18px;
+      background: var(--orange);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+      margin-top: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 0.6s ease-out 0.5s both;
+    }
+
+    .btn-entrar::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .btn-entrar:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .btn-entrar:hover {
+      background: #ff8533;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(255, 102, 0, 0.5);
+    }
+
+    .btn-entrar:active {
+      transform: translateY(-1px);
+    }
+
+    .btn-entrar:disabled {
+      background: #999999;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+      opacity: 0.6;
+    }
+
+    .forgot-password {
+      text-align: center;
+      margin-top: 20px;
+      width: 100%;
+      animation: fadeInUp 0.6s ease-out 0.6s both;
+    }
+
+    .forgot-password a {
+      color: rgba(255, 255, 255, 0.9);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+    }
+
+    .forgot-password a:hover {
+      color: white;
+      text-decoration: underline;
+    }
+
+    #status {
+      margin-top: 1.5rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: 500;
+      text-align: center;
+      font-size: 0.85rem;
+      color: white;
+      width: 100%;
+      display: none;
+    }
+
+    #status.show {
+      display: block;
+    }
+    
+    /* Responsividade */
+    @media (max-width: 1400px) {
+      .background-container {
+        width: 70%;
+      }
+      .login-container {
+        width: 30%;
+      }
+      .login-card {
+        transform: translateX(-80px);
+      }
+      @keyframes slideInRight {
+        0% {
+          opacity: 0;
+          transform: translateX(100px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateX(-80px);
+        }
+      }
+    }
+
+    @media (max-width: 1200px) {
+      .background-container {
+        width: 65%;
+      }
+      .login-container {
+        width: 35%;
+        justify-content: center;
+        padding-left: 0;
+      }
+      .login-card {
+        transform: translateX(0);
+        width: 85%;
+        max-width: 400px;
+      }
+      @keyframes slideInRight {
+        0% {
+          opacity: 0;
+          transform: translateX(50px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      .hero-text h1 {
+        font-size: 3rem;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .background-container {
+        width: 100%;
+      }
+      .background-overlay {
+        background: linear-gradient(135deg, rgba(255, 102, 0, 0.45) 0%, rgba(255, 140, 0, 0.35) 100%);
+      }
+      .login-container {
+        width: 100%;
+        background: transparent;
+        padding-left: 0;
+        justify-content: center;
+      }
+      .login-card {
+        transform: translateX(0);
+        animation: fadeIn 0.6s ease-out;
+        width: 90%;
+        max-width: 450px;
+      }
+      @keyframes fadeIn {
+        0% { opacity: 0; }
+        100% { opacity: 1; }
+      }
+      .hero-text {
+        display: none;
+      }
+      .login-card {
+        background: rgba(0, 51, 204, 0.95);
+        backdrop-filter: blur(10px);
+      }
+    }
+
+    @media (max-width: 500px) {
+      .login-card {
+        padding: 40px 30px;
+        border-radius: 30px;
+        width: 95%;
+      }
+      .logo-container img {
+        max-width: 180px;
+      }
+      .btn-voltar {
+        left: -10px;
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+      }
+      .hero-text h1 {
+        font-size: 2.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background com imagem e overlay -->
+  <div class="background-container">
+    <img 
+      src="/images/homem-e-mulher-fazendo-compras-no-supermercado.jpg" 
+      alt="Background" 
+      class="background-image"
+      loading="eager"
+      decoding="async"
+      onload="this.classList.add('loaded')">
+    <div class="background-overlay"></div>
+  </div>
+
+  <!-- Texto Hero -->
+  <div class="hero-text">
+    <h1>
+      Uma maneira<br>
+      inovadora de<br>
+      <span class="highlight">comprar</span>
+    </h1>
+  </div>
+
+  <!-- Container de Login -->
+  <div class="login-container">
+    <div class="login-card">
+      <div class="logo-container">
+        <a href="/index.html" class="btn-voltar" title="Voltar para o início">
+          <i class="fas fa-arrow-left"></i>
+        </a>
+        <img src="/images/Group 21.png" alt="BRAGO B2B Distribuidora">
+      </div>
+
+      <form id="formLogin">
+        <div class="form-group">
+          <label for="email">E-mail</label>
+          <input id="email" type="email" placeholder="seu-email@exemplo.com" autocomplete="username" required />
+        </div>
+
+        <div class="form-group">
+          <label for="senha">Senha</label>
+          <input id="senha" type="password" placeholder="••••••••" autocomplete="current-password" required />
+          <button type="button" class="password-toggle" onclick="togglePassword()">
+            <i class="fas fa-eye" id="toggleIcon"></i>
+          </button>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="lembrarSenha" />
+          <label for="lembrarSenha">Lembrar senha</label>
+        </div>
+
+        <button type="submit" class="btn-entrar" id="btnLogin">
+          Entrar
+        </button>
+      </form>
+
+      <div class="forgot-password">
+        <a href="/forgot-password.html">Esqueci minha senha</a>
+      </div>
+
+      <div id="status"></div>
+    </div>
+  </div>
+
+  <!-- Modal de Primeira Senha -->
+  <div id="modalPrimeiraSenha" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 16px; padding: 2.5rem; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <i class="fas fa-key" style="font-size: 3rem; color: var(--orange); margin-bottom: 1rem;"></i>
+        <h2 style="color: var(--dark-blue); margin: 0;">Defina sua Senha</h2>
+        <p style="color: #666; margin: 0.5rem 0 0 0;">Por segurança, defina uma nova senha para continuar</p>
+      </div>
+
+      <form id="formPrimeiraSenha" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div>
+          <label for="novaSenha1" style="display: block; margin-bottom: 0.5rem; color: var(--dark-blue); font-weight: 500;">Nova Senha</label>
+          <input id="novaSenha1" type="password" placeholder="Mínimo 8 caracteres" required style="width: 100%; padding: 0.85rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box;">
+          <small style="display: block; margin-top: 0.25rem; color: #666;">Mínimo de 8 caracteres</small>
+        </div>
+
+        <div>
+          <label for="novaSenha2" style="display: block; margin-bottom: 0.5rem; color: var(--dark-blue); font-weight: 500;">Confirme a Nova Senha</label>
+          <input id="novaSenha2" type="password" placeholder="Digite novamente" required style="width: 100%; padding: 0.85rem; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box;">
+        </div>
+
+        <div id="statusPrimeiraSenha" style="display: none; padding: 1rem; border-radius: 8px; text-align: center; font-weight: 500;"></div>
+
+        <button type="submit" id="btnSalvarSenha" style="width: 100%; padding: 1rem; background: var(--orange); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+          Confirmar Senha
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const $ = sel => document.querySelector(sel);
+    const tokenKey = 'nexus_b2b_token';
+
+    // Função para alternar visibilidade da senha
+    function togglePassword() {
+      const senhaInput = $('#senha');
+      const toggleIcon = $('#toggleIcon');
+      
+      if (senhaInput.type === 'password') {
+        senhaInput.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+      } else {
+        senhaInput.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
+      }
+    }
+
+    function setToken(tok) {
+      if (tok) {
+        localStorage.setItem(tokenKey, tok);
+      } else {
+        localStorage.removeItem(tokenKey);
+      }
+    }
+
+    function getToken() {
+      return localStorage.getItem(tokenKey);
+    }
+
+    // Carregar credenciais salvas ao iniciar
+    function carregarCredenciaisSalvas() {
+      const emailSalvo = localStorage.getItem('nexus_email_salvo');
+      const senhaSalva = localStorage.getItem('nexus_senha_salva');
+      const senhaLembrada = localStorage.getItem('nexus_lembrar_senha');
+      
+      if (emailSalvo && senhaLembrada === 'true') {
+        $('#email').value = emailSalvo;
+        $('#lembrarSenha').checked = true;
+        
+        if (senhaSalva) {
+          $('#senha').value = atob(senhaSalva); // Decodificar senha
+        }
+      }
+    }
+
+    // Salvar/remover credenciais conforme checkbox
+    function gerenciarCredenciais(email, senha) {
+      if ($('#lembrarSenha').checked) {
+        localStorage.setItem('nexus_email_salvo', email);
+        localStorage.setItem('nexus_senha_salva', btoa(senha)); // Codificar senha em base64
+        localStorage.setItem('nexus_lembrar_senha', 'true');
+      } else {
+        localStorage.removeItem('nexus_email_salvo');
+        localStorage.removeItem('nexus_senha_salva');
+        localStorage.removeItem('nexus_lembrar_senha');
+      }
+    }
+
+    async function login(e) {
+      e.preventDefault();
+      
+      const email = $('#email').value.trim();
+      const senha = $('#senha').value.trim();
+      const btnLogin = $('#btnLogin');
+      const statusDiv = $('#status');
+      
+      if (!email || !senha) {
+        statusDiv.textContent = '⚠️ Preencha email e senha';
+        statusDiv.style.background = 'rgba(220, 53, 69, 0.2)';
+        statusDiv.style.border = '1px solid rgba(220, 53, 69, 0.4)';
+        statusDiv.classList.add('show');
+        return;
+      }
+
+      try {
+        btnLogin.disabled = true;
+        btnLogin.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
+        
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, senha })
+        });
+        const data = await res.json();
+        
+        if (!res.ok) throw new Error(data.error || 'Falha no login');
+        
+        setToken(data.token);
+        
+        // Verificar se é primeiro login
+        if (data.primeiroLogin) {
+          statusDiv.textContent = '✅ Login realizado!';
+          statusDiv.style.background = 'rgba(0, 166, 80, 0.2)';
+          statusDiv.style.border = '1px solid rgba(0, 166, 80, 0.4)';
+          statusDiv.classList.add('show');
+          
+          // Mostrar modal de primeira senha
+          setTimeout(() => {
+            $('#modalPrimeiraSenha').style.display = 'flex';
+          }, 500);
+          return;
+        }
+        
+        // Gerenciar credenciais salvas
+        gerenciarCredenciais(email, senha);
+        
+        // Redirecionar baseado no perfil
+        const payload = JSON.parse(atob(data.token.split('.')[1]));
+        statusDiv.textContent = '✅ Login realizado! Redirecionando...';
+        statusDiv.style.background = 'rgba(0, 166, 80, 0.2)';
+        statusDiv.style.border = '1px solid rgba(0, 166, 80, 0.4)';
+        statusDiv.classList.add('show');
+        
+        setTimeout(() => {
+          if (payload.perfil === 'admin' || payload.perfil === 'gestor') {
+            window.location.href = '/gestor.html';
+          } else if (payload.perfil === 'vendedor') {
+            window.location.href = '/vendedor.html';
+          } else if (payload.perfil === 'solicitante') {
+            window.location.href = '/equipe.html';
+          } else {
+            window.location.href = '/';
+          }
+        }, 500);
+      } catch (error) {
+        statusDiv.textContent = '❌ ' + error.message;
+        statusDiv.style.background = 'rgba(220, 53, 69, 0.2)';
+        statusDiv.style.border = '1px solid rgba(220, 53, 69, 0.4)';
+        statusDiv.classList.add('show');
+      } finally {
+        btnLogin.disabled = false;
+        btnLogin.innerHTML = 'Entrar';
+      }
+    }
+
+    // Função para trocar senha no primeiro login
+    async function salvarPrimeiraSenha(e) {
+      e.preventDefault();
+      
+      const novaSenha1 = $('#novaSenha1').value;
+      const novaSenha2 = $('#novaSenha2').value;
+      const btnSalvar = $('#btnSalvarSenha');
+      const statusDiv = $('#statusPrimeiraSenha');
+      
+      if (novaSenha1 !== novaSenha2) {
+        statusDiv.textContent = '❌ As senhas não coincidem';
+        statusDiv.style.background = 'rgba(220, 53, 69, 0.1)';
+        statusDiv.style.border = '1px solid rgba(220, 53, 69, 0.3)';
+        statusDiv.style.color = '#dc3545';
+        statusDiv.style.display = 'block';
+        return;
+      }
+      
+      if (novaSenha1.length < 8) {
+        statusDiv.textContent = '❌ A senha deve ter no mínimo 8 caracteres';
+        statusDiv.style.background = 'rgba(220, 53, 69, 0.1)';
+        statusDiv.style.border = '1px solid rgba(220, 53, 69, 0.3)';
+        statusDiv.style.color = '#dc3545';
+        statusDiv.style.display = 'block';
+        return;
+      }
+      
+      try {
+        btnSalvar.disabled = true;
+        btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+        
+        const token = getToken();
+        const res = await fetch('/api/auth/change-first-password', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ novaSenha: novaSenha1 })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) throw new Error(data.error || 'Falha ao trocar senha');
+        
+        statusDiv.textContent = '✅ Senha definida com sucesso! Redirecionando...';
+        statusDiv.style.background = 'rgba(0, 166, 80, 0.1)';
+        statusDiv.style.border = '1px solid rgba(0, 166, 80, 0.3)';
+        statusDiv.style.color = '#00a650';
+        statusDiv.style.display = 'block';
+        
+        // Redirecionar após trocar senha
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setTimeout(() => {
+          if (payload.perfil === 'admin' || payload.perfil === 'gestor') {
+            window.location.href = '/gestor.html';
+          } else if (payload.perfil === 'vendedor') {
+            window.location.href = '/vendedor.html';
+          } else if (payload.perfil === 'solicitante') {
+            window.location.href = '/equipe.html';
+          } else {
+            window.location.href = '/';
+          }
+        }, 1500);
+      } catch (error) {
+        statusDiv.textContent = '❌ ' + error.message;
+        statusDiv.style.background = 'rgba(220, 53, 69, 0.1)';
+        statusDiv.style.border = '1px solid rgba(220, 53, 69, 0.3)';
+        statusDiv.style.color = '#dc3545';
+        statusDiv.style.display = 'block';
+      } finally {
+        btnSalvar.disabled = false;
+        btnSalvar.innerHTML = 'Confirmar Senha';
+      }
+    }
+
+    // Event listeners
+    $('#formLogin').addEventListener('submit', login);
+    $('#formPrimeiraSenha').addEventListener('submit', salvarPrimeiraSenha);
+    
+    // Enter key navigation
+    $('#email').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        $('#senha').focus();
+      }
+    });
+
+    // Carregar credenciais salvas
+    carregarCredenciaisSalvas();
+  </script>
+</body>
+</html>

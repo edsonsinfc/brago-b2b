@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Vendedor - B2B Brago Distribuidora</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/vendedor.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <img src="/images/Group 23.svg" 
+                 alt="Brago Distribuidora" class="sidebar-logo">
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-view="dashboard">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-view="pedidos">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Pedidos</span>
+            </a>
+            <a href="#" class="nav-item" data-view="produtos">
+                <i class="fas fa-box"></i>
+                <span>Produtos</span>
+            </a>
+            <a href="#" class="nav-item" data-view="lojas">
+                <i class="fas fa-store"></i>
+                <span>Lojas</span>
+            </a>
+            <a href="#" class="nav-item" data-view="relatorios">
+                <i class="fas fa-file-alt"></i>
+                <span>Relatórios</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">V</div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">Carregando...</div>
+                    <div class="user-role">Vendedor</div>
+                </div>
+            </div>
+            <button onclick="logout()" class="btn btn-secondary" style="width: 100%; justify-content: center;">
+                <i class="fas fa-sign-out-alt"></i>
+                Sair
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Topbar -->
+        <div class="topbar">
+            <h1 class="topbar-title" id="viewTitle">Dashboard</h1>
+            <div class="topbar-actions">
+                <button class="btn btn-secondary" onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i>
+                    Atualizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+            <!-- View: Dashboard -->
+            <div id="view-dashboard" class="view-content">
+                <!-- Stats Cards -->
+                <div class="stats-grid" id="statsGrid">
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 16px;">Carregando indicadores...</p>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Vendas Mensais</h3>
+                            <select class="chart-filter" id="vendasPeriodo">
+                                <option value="12">Últimos 12 meses</option>
+                                <option value="6">Últimos 6 meses</option>
+                                <option value="3">Últimos 3 meses</option>
+                            </select>
+                        </div>
+                        <canvas id="vendasChart" height="80"></canvas>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Status dos Pedidos</h3>
+                        </div>
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Orders Preview -->
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3 class="table-title">Pedidos Recentes</h3>
+                        <button class="btn btn-secondary" onclick="switchView('pedidos')">
+                            Ver Todos
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <div id="recentOrdersTable">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View: Pedidos -->
+            <div id="view-pedidos" class="view-content" style="display: none;">
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3 class="table-title">Todos os Pedidos</h3>
+                        <div class="table-actions">
+                            <div class="search-box">
+                                <input type="text" id="searchPedidos" placeholder="Buscar pedidos...">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <select id="filterStatus" class="chart-filter">
+                                <option value="">Todos Status</option>
+                                <option value="PENDENTE_APROVACAO">Pendente</option>
+                                <option value="APROVADO">Aprovado</option>
+                                <option value="CANCELADO">Cancelado</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="exportarPedidos()">
+                                <i class="fas fa-download"></i>
+                                Exportar
+                            </button>
+                        </div>
+                    </div>
+                    <div id="pedidosTableContainer">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                    <div id="pagination" style="padding: 24px; display: flex; justify-content: center; gap: 8px;"></div>
+                </div>
+            </div>
+
+            <!-- View: Produtos -->
+            <div id="view-produtos" class="view-content" style="display: none;">
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3 class="table-title">Produtos Mais Vendidos</h3>
+                        <select id="produtosLimit" class="chart-filter">
+                            <option value="10">Top 10</option>
+                            <option value="20">Top 20</option>
+                            <option value="50">Top 50</option>
+                        </select>
+                    </div>
+                    <div id="produtosTableContainer">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View: Lojas -->
+            <div id="view-lojas" class="view-content" style="display: none;">
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3 class="table-title">Ranking de Lojas</h3>
+                        <select id="lojasLimit" class="chart-filter">
+                            <option value="10">Top 10</option>
+                            <option value="20">Top 20</option>
+                            <option value="all">Todas</option>
+                        </select>
+                    </div>
+                    <div id="lojasTableContainer">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View: Relatórios -->
+            <div id="view-relatorios" class="view-content" style="display: none;">
+                <div class="stats-grid">
+                    <div class="stat-card primary">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-label">Relatório Disponível</div>
+                                <div class="stat-value">Em Breve</div>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                        </div>
+                        <p style="color: var(--gray-600); font-size: 14px;">Funcionalidade em desenvolvimento</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/vendedor.js"></script>
+</body>
+</html>

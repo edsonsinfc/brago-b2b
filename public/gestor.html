@@ -1,0 +1,3460 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>BRAGO Distribuidora - Dashboard Gestor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/pedidos.css?v=20251107">
+  <style>
+    :root {
+      --primary: #0066cc;
+      --primary-dark: #0052a3;
+      --secondary: #ff6600;
+      --success: #00a650;
+      --danger: #dc3545;
+      --warning: #ff9500;
+      --bg-light: #f8f9fa;
+      --white: #ffffff;
+      --gray-100: #f8f9fa;
+      --gray-200: #e9ecef;
+      --gray-300: #dee2e6;
+      --gray-400: #ced4da;
+      --gray-500: #adb5bd;
+      --gray-600: #6c757d;
+      --gray-700: #495057;
+      --gray-800: #343a40;
+      --gray-900: #212529;
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+      --shadow: 0 4px 6px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-light);
+      color: var(--gray-900);
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .header {
+      background: var(--white);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    /* Estilos para seleção de equipes */
+    .equipes-checkboxes {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      padding: 0.75rem;
+      background: white;
+    }
+
+    .equipe-checkbox-item {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .equipe-checkbox-item:hover {
+      background-color: var(--gray-100);
+    }
+
+    .equipe-checkbox-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-right: 0.75rem;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+
+    .equipe-checkbox-item label {
+      cursor: pointer;
+      user-select: none;
+      flex: 1;
+      font-size: 0.95rem;
+    }
+
+    .equipes-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      min-height: 36px;
+    }
+
+    .equipe-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      background: linear-gradient(135deg, var(--primary) 0%, #0052a3 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      box-shadow: 0 2px 4px rgba(0,102,204,0.2);
+    }
+
+    .equipe-tag i {
+      cursor: pointer;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+
+    .equipe-tag i:hover {
+      opacity: 1;
+    }
+
+    .equipes-modal-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .equipes-modal-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,102,204,0.3);
+    }
+
+    /* Badges de equipes na tabela */
+    .equipes-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.75rem;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border-radius: 16px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(16,185,129,0.2);
+      white-space: nowrap;
+      cursor: help;
+    }
+
+    .equipes-badge.single {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      box-shadow: 0 2px 4px rgba(59,130,246,0.2);
+    }
+
+    .equipes-badge.multiple {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      box-shadow: 0 2px 4px rgba(245,158,11,0.2);
+    }
+
+    .equipes-badge.all {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      box-shadow: 0 2px 4px rgba(139,92,246,0.2);
+    }
+
+    .equipes-badge.none {
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+      box-shadow: 0 2px 4px rgba(107,114,128,0.2);
+    }
+
+    .equipes-badge i {
+      font-size: 0.75rem;
+    }
+
+    .equipes-list-tooltip {
+      position: relative;
+    }
+
+    .equipes-list-tooltip:hover::after {
+      content: attr(data-equipes);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      white-space: pre-line;
+      z-index: 1000;
+      min-width: 200px;
+      max-width: 300px;
+      text-align: left;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      margin-bottom: 8px;
+    }
+
+    .equipes-list-tooltip:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: rgba(0, 0, 0, 0.9);
+      margin-bottom: 2px;
+    }
+
+    .equipes-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      height: 24px;
+      padding: 0 0.5rem;
+      background: white;
+      color: var(--primary);
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    /* Modal de equipes */
+    .equipes-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .equipes-modal.active {
+      display: flex;
+    }
+
+    .equipes-modal-content {
+      background: white;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    }
+
+    .equipes-modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .equipes-modal-header h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+
+    .equipes-modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--gray-500);
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .equipes-modal-close:hover {
+      background: var(--gray-100);
+      color: var(--gray-700);
+    }
+
+    .equipes-modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .equipes-modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    @media (max-width: 768px) {
+      .equipes-checkboxes {
+        max-height: 150px;
+      }
+      
+      .equipe-tag {
+        font-size: 0.8rem;
+        padding: 0.35rem 0.65rem;
+      }
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .nav-tab {
+      padding: 0.75rem 1rem;
+      border: none;
+      background: transparent;
+      color: var(--gray-600);
+      cursor: pointer;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .nav-tab.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .nav-tab:hover:not(.active) {
+      background: var(--gray-100);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logout-btn {
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .logout-btn:hover {
+      background: #c82333;
+    }
+
+    /* Badge de equipes no header */
+    .user-equipes-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.85rem;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+      cursor: help;
+      position: relative;
+      margin-left: 0.75rem;
+      transition: all 0.3s ease;
+    }
+
+    .user-equipes-badge.single {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    .user-equipes-badge.multiple {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+    }
+
+    .user-equipes-badge.all {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+    }
+
+    .user-equipes-badge:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+
+    .user-equipes-badge i {
+      font-size: 0.9rem;
+    }
+
+    /* Tooltip para mostrar lista de equipes */
+    .user-equipes-badge::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      top: calc(100% + 12px);
+      left: 50%;
+      transform: translateX(-50%) scale(0);
+      background: rgba(0, 0, 0, 0.95);
+      color: white;
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      white-space: pre-line;
+      z-index: 1000;
+      min-width: 250px;
+      max-width: 350px;
+      text-align: left;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      line-height: 1.6;
+    }
+
+    .user-equipes-badge::before {
+      content: '';
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 50%;
+      transform: translateX(-50%) scale(0);
+      border: 8px solid transparent;
+      border-bottom-color: rgba(0, 0, 0, 0.95);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .user-equipes-badge:hover::after {
+      transform: translateX(-50%) scale(1);
+      opacity: 1;
+    }
+
+    .user-equipes-badge:hover::before {
+      transform: translateX(-50%) scale(1);
+      opacity: 1;
+    }
+
+    /* Main Content */
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Cards and Grid */
+    .grid {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--gray-800);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--gray-700);
+      font-size: 0.9rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid var(--gray-300);
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: border-color 0.2s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 1rem;
+      align-items: end;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.75rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: var(--gray-200);
+      color: var(--gray-700);
+    }
+
+    .btn-secondary:hover {
+      background: var(--gray-300);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #008c42;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c82333;
+    }
+
+    .btn-sm {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    /* Tables */
+    .table-container {
+      background: var(--white);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table th,
+    .table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .table th {
+      background: var(--gray-50);
+      font-weight: 600;
+      color: var(--gray-700);
+      font-size: 0.9rem;
+    }
+
+    .table tbody tr:hover {
+      background: var(--gray-50);
+    }
+
+    /* Status Pills */
+    .status {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .status.success {
+      background: rgba(0, 166, 80, 0.1);
+      color: var(--success);
+    }
+
+    .status.danger {
+      background: rgba(220, 53, 69, 0.1);
+      color: var(--danger);
+    }
+
+    .status.warning {
+      background: rgba(255, 149, 0, 0.1);
+      color: var(--warning);
+    }
+
+    .status.info {
+      background: rgba(0, 102, 204, 0.1);
+      color: var(--primary);
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: var(--gray-50);
+    }
+
+    .pagination-info {
+      color: var(--gray-600);
+      font-size: 0.9rem;
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* Messages */
+    .message {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .message.success {
+      background: rgba(0, 166, 80, 0.1);
+      color: var(--success);
+      border: 1px solid rgba(0, 166, 80, 0.2);
+    }
+
+    .message.error {
+      background: rgba(220, 53, 69, 0.1);
+      color: var(--danger);
+      border: 1px solid rgba(220, 53, 69, 0.2);
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none; /* Oculto por padrão */
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+    
+    .modal.show {
+      display: flex; /* Mostra quando tiver a classe show */
+    }
+
+    .modal-content {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--gray-500);
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+      background: var(--gray-100);
+      color: var(--gray-700);
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+
+    /* Dashboard Styles */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .dashboard-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .dashboard-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .dashboard-card-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      color: white;
+    }
+
+    .dashboard-card-primary .dashboard-card-icon {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .dashboard-card-success .dashboard-card-icon {
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    }
+
+    .dashboard-card-info .dashboard-card-icon {
+      background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    }
+
+    .dashboard-card-warning .dashboard-card-icon {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .dashboard-card-content h3 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 0.25rem;
+    }
+
+    .dashboard-card-content p {
+      color: var(--gray-600);
+      font-size: 0.875rem;
+      margin: 0;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--gray-200);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+      transition: width 0.3s ease;
+    }
+
+    .progress-fill.warning {
+      background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .progress-fill.danger {
+      background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .status-badge-dashboard {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-badge-dashboard.excelente {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-badge-dashboard.bom {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .status-badge-dashboard.atencao {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-badge-dashboard.critico {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-content {
+        padding: 1rem;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .nav-tabs {
+        order: 2;
+      }
+
+      .main-content {
+        padding: 1rem;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-row {
+        flex-direction: column;
+      }
+
+      .table-container {
+        overflow-x: auto;
+      }
+    }
+
+    /* Estilos para Galeria */
+    .galeria-subtab {
+      transition: all 0.2s ease;
+    }
+
+    .galeria-subtab:hover {
+      color: var(--primary) !important;
+    }
+
+    .galeria-subtab.active {
+      color: var(--primary) !important;
+      border-bottom-color: var(--primary) !important;
+    }
+
+    .galeria-subtab-content {
+      display: none;
+    }
+
+    .galeria-subtab-content.active {
+      display: block;
+    }
+
+    .product-checkbox {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    /* Estilos Modernos para Usuários e Emails */
+    .modern-card {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+      background: white;
+    }
+
+    .modern-card .card-header {
+      padding: 1.5rem;
+      border-bottom: none;
+    }
+
+    .modern-card .card-header h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .modern-form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .modern-form-group {
+      margin: 0 !important;
+    }
+
+    .modern-form-group .form-label {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .modern-form-group .form-label i {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+
+    .modern-input {
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 0.625rem 0.875rem;
+      transition: all 0.2s ease;
+      font-size: 0.9375rem;
+      background: white;
+      color: #1f2937;
+    }
+
+    .modern-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .modern-input::placeholder {
+      color: #9ca3af;
+    }
+
+    .modern-btn {
+      border-radius: 6px;
+      padding: 0.625rem 1.25rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      box-shadow: none;
+      font-size: 0.9375rem;
+    }
+
+    .modern-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .modern-table-container {
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      background: white;
+    }
+
+    .modern-table {
+      margin: 0;
+      width: 100%;
+    }
+
+    /* Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .3s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+    }
+
+    input:checked + .slider {
+      background-color: #10b981;
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px #10b981;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    .slider.round {
+      border-radius: 24px;
+    }
+
+    .slider.round:before {
+      border-radius: 50%;
+    }
+
+
+    .modern-table thead {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .modern-table thead th {
+      color: white;
+      font-weight: 600;
+      padding: 0.875rem 1rem;
+      border: none;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    .modern-table tbody tr {
+      transition: background-color 0.15s ease;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .modern-table tbody tr:hover {
+      background-color: #f9fafb;
+    }
+
+    .modern-table tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    .modern-table tbody td {
+      padding: 0.75rem 1rem;
+      vertical-align: middle;
+      font-size: 0.9375rem;
+      color: #374151;
+    }
+
+    .modern-table tbody td input,
+    .modern-table tbody td select {
+      font-size: 0.9375rem;
+      padding: 0.5rem 0.75rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      gap: 0.375rem;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    .status-badge.ativo {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-badge.inativo {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.875rem;
+    }
+
+    .btn-icon.save {
+      background-color: #10b981;
+      color: white;
+    }
+
+    .btn-icon.save:hover {
+      background-color: #059669;
+      transform: scale(1.05);
+    }
+
+    .btn-icon.delete {
+      background-color: #ef4444;
+      color: white;
+    }
+
+    .btn-icon.delete:hover {
+      background-color: #dc2626;
+      transform: scale(1.05);
+    }
+
+    #tab-emails .card-header h3,
+    #tab-usuarios .card-header h3 {
+      color: white;
+    }
+
+    /* Melhorar contraste em selects dentro da tabela */
+    .modern-table tbody select option {
+      color: #1f2937;
+      background: white;
+    }
+
+    /* Estilos para o filtro de equipes em pedidos */
+    #equipesChecklistPedidos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .equipe-filtro-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      background: white;
+      border-radius: 6px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .equipe-filtro-item:hover {
+      background: #f3f4f6;
+      transform: translateX(2px);
+    }
+
+    .equipe-filtro-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #667eea;
+    }
+
+    .equipe-filtro-item label {
+      cursor: pointer;
+      user-select: none;
+      flex: 1;
+      font-size: 0.9rem;
+      color: #374151;
+      font-weight: 500;
+    }
+
+    #equipesFiltradasCount {
+      font-weight: 600;
+    }
+
+    /* Estilos para Cards de Usuários */
+    .usuario-card {
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .usuario-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+
+    .usuario-card.expandido {
+      border-color: #667eea;
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+    }
+
+    .usuario-card-header {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto auto;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1.25rem 1.5rem;
+      cursor: pointer;
+      background: linear-gradient(to right, #f9fafb 0%, #ffffff 100%);
+      transition: background 0.2s;
+    }
+
+    .usuario-card-header:hover {
+      background: linear-gradient(to right, #f3f4f6 0%, #f9fafb 100%);
+    }
+
+    .usuario-card.expandido .usuario-card-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .usuario-id {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #6b7280;
+      min-width: 40px;
+    }
+
+    .usuario-card.expandido .usuario-id {
+      color: white;
+    }
+
+    .usuario-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .usuario-nome {
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: #1f2937;
+    }
+
+    .usuario-card.expandido .usuario-nome {
+      color: white;
+    }
+
+    .usuario-email {
+      font-size: 0.9rem;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .usuario-card.expandido .usuario-email {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .usuario-perfil-badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .perfil-admin {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+
+    .perfil-gestor {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+    }
+
+    .perfil-solicitante {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+
+    .perfil-vendedor {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+    }
+
+    .usuario-status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    .usuario-status-badge.ativo {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .usuario-status-badge.inativo {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .usuario-expand-icon {
+      font-size: 1.2rem;
+      color: #9ca3af;
+      transition: transform 0.3s, color 0.2s;
+    }
+
+    .usuario-card.expandido .usuario-expand-icon {
+      transform: rotate(180deg);
+      color: white;
+    }
+
+    .usuario-card-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .usuario-card.expandido .usuario-card-body {
+      max-height: 2000px;
+    }
+
+    .usuario-card-content {
+      padding: 2rem;
+      background: #f9fafb;
+      border-top: 2px solid #e5e7eb;
+    }
+
+    .usuario-form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .usuario-form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .usuario-form-label {
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .usuario-form-label i {
+      color: #667eea;
+    }
+
+    .usuario-form-input {
+      padding: 0.75rem 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    .usuario-form-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .usuario-form-input:disabled {
+      background: #f3f4f6;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .usuario-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      padding-top: 1rem;
+      border-top: 2px solid #e5e7eb;
+    }
+
+    .usuario-equipes-display {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .usuario-equipe-tag {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 0.4rem 0.8rem;
+      border-radius: 16px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    /* Estilos para Cards de Equipes */
+    .equipe-card {
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .equipe-card:hover {
+      border-color: #10b981;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+    }
+
+    .equipe-card.expandido {
+      border-color: #10b981;
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+    }
+
+    .equipe-card-header {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto auto;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1.25rem 1.5rem;
+      cursor: pointer;
+      background: linear-gradient(to right, #f9fafb 0%, #ffffff 100%);
+      transition: background 0.2s;
+    }
+
+    @media (max-width: 768px) {
+      .equipe-card-header {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        padding: 1rem;
+      }
+    }
+
+    .equipe-card-header:hover {
+      background: linear-gradient(to right, #f3f4f6 0%, #f9fafb 100%);
+    }
+
+    .equipe-card.expandido .equipe-card-header {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+
+    .equipe-id {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #6b7280;
+      min-width: 40px;
+    }
+
+    .equipe-card.expandido .equipe-id {
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .equipe-id {
+        display: none;
+      }
+    }
+
+    .equipe-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    @media (max-width: 768px) {
+      .equipe-info {
+        order: 1;
+      }
+    }
+
+    .equipe-nome {
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: #1f2937;
+    }
+
+    @media (max-width: 768px) {
+      .equipe-nome {
+        font-size: 1.15rem;
+        font-weight: 700;
+      }
+    }
+
+    .equipe-card.expandido .equipe-nome {
+      color: white;
+    }
+
+    .equipe-detalhes {
+      font-size: 0.9rem;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .equipe-card.expandido .equipe-detalhes {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    @media (max-width: 768px) {
+      .equipe-detalhes {
+        font-size: 0.85rem;
+      }
+    }
+
+    .equipe-limite-badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .equipe-limite-badge {
+        order: 3;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+        justify-self: start;
+      }
+    }
+
+    .equipe-status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+      .equipe-status-badge {
+        order: 2;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+        justify-self: start;
+      }
+    }
+
+    .equipe-status-badge.excelente {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .equipe-status-badge.bom {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .equipe-status-badge.atencao {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .equipe-status-badge.critico {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .equipe-expand-icon {
+      font-size: 1.2rem;
+      color: #9ca3af;
+      transition: transform 0.3s, color 0.2s;
+    }
+
+    .equipe-card.expandido .equipe-expand-icon {
+      transform: rotate(180deg);
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .equipe-expand-icon {
+        order: 4;
+        justify-self: center;
+        font-size: 1.5rem;
+      }
+    }
+
+    .equipe-card-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .equipe-card.expandido .equipe-card-body {
+      max-height: 1500px;
+    }
+
+    .equipe-card-content {
+      padding: 2rem;
+      background: #f9fafb;
+      border-top: 2px solid #e5e7eb;
+    }
+
+    @media (max-width: 768px) {
+      .equipe-card-content {
+        padding: 1rem;
+      }
+    }
+
+    .equipe-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .equipe-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+    }
+
+    .equipe-stat-box {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid #10b981;
+    }
+
+    .equipe-stat-label {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .equipe-stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .equipe-progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .equipe-progress-fill {
+      height: 100%;
+      transition: width 0.3s ease;
+      border-radius: 4px;
+    }
+
+    .progress-excelente {
+      background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+    }
+
+    .progress-bom {
+      background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+    }
+
+    .progress-atencao {
+      background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .progress-critico {
+      background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .equipe-form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .equipe-form-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+    }
+
+    .equipe-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      padding-top: 1rem;
+      border-top: 2px solid #e5e7eb;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .equipe-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .equipe-actions button {
+        width: 100%;
+      }
+    }
+
+    /* Botões de Admin */
+    .admin-actions {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    /* Estilos de Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+      width: 90%;
+      max-width: 600px;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 16px 16px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .modal-close {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: rotate(90deg);
+    }
+
+    .modal-body {
+      padding: 2rem;
+    }
+
+    .modal-footer {
+      padding: 1.25rem 2rem;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* Consulta de Saldo */
+    .saldo-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .saldo-card {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 1.25rem;
+      border-radius: 12px;
+      text-align: center;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .saldo-card:hover {
+      border-color: #667eea;
+      transform: translateY(-3px);
+    }
+
+    .saldo-label {
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .saldo-valor {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .saldo-valor.success {
+      color: #10b981;
+    }
+
+    .saldo-valor.danger {
+      color: #ef4444;
+    }
+
+    .saldo-valor.warning {
+      color: #f59e0b;
+    }
+
+    .saldo-progress-container {
+      margin: 1.5rem 0;
+    }
+
+    .saldo-progress-bar {
+      width: 100%;
+      height: 30px;
+      background: #e5e7eb;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+
+    .saldo-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+      transition: all 0.5s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .saldo-progress-fill.warning {
+      background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+    }
+
+    .saldo-progress-fill.danger {
+      background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+    }
+
+    .saldo-detalhes {
+      margin-top: 1.5rem;
+      padding: 1.25rem;
+      background: #f9fafb;
+      border-radius: 12px;
+      border-left: 4px solid #667eea;
+    }
+
+    .saldo-detalhes p {
+      margin: 0.5rem 0;
+      font-size: 0.95rem;
+      color: #4b5563;
+    }
+
+    .saldo-detalhes strong {
+      color: #1f2937;
+      margin-right: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .modal-container {
+        width: 95%;
+        max-height: 95vh;
+      }
+      .modal-body {
+        padding: 1.25rem;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .saldo-info-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* Cards de Pedidos */
+    .pedidos-cards-container {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .pedido-card {
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .pedido-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .pedido-card.pendente {
+      border-color: #fbbf24;
+      background: linear-gradient(to right, #fffbeb 0%, #ffffff 100%);
+    }
+
+    .pedido-card.aprovado {
+      border-color: #10b981;
+    }
+
+    .pedido-card.cancelado {
+      border-color: #ef4444;
+      opacity: 0.8;
+    }
+
+    .pedido-card-header {
+      padding: 1.25rem;
+      background: linear-gradient(to right, #f9fafb 0%, #ffffff 100%);
+      border-bottom: 2px solid #e5e7eb;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .pedido-card.pendente .pedido-card-header {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      color: white;
+    }
+
+    .pedido-id {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .pedido-card.pendente .pedido-id {
+      color: white;
+    }
+
+    .pedido-main-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .pedido-equipe {
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: #1f2937;
+    }
+
+    .pedido-card.pendente .pedido-equipe {
+      color: white;
+    }
+
+    .pedido-data {
+      font-size: 0.85rem;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .pedido-card.pendente .pedido-data {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .pedido-valor {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #10b981;
+      text-align: right;
+    }
+
+    .pedido-card.pendente .pedido-valor {
+      color: white;
+    }
+
+    .pedido-card-body {
+      padding: 1.25rem;
+    }
+
+    .pedido-status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .pedido-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .pedido-status-badge.pendente {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .pedido-status-badge.aprovado {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .pedido-status-badge.em_separacao {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .pedido-status-badge.cancelado,
+    .pedido-status-badge.reprovado {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .pedido-status-badge.entregue {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .pedido-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .pedido-actions .btn {
+      flex: 1;
+      min-width: 140px;
+    }
+
+    @media (max-width: 768px) {
+      .pedido-card-header {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+
+      .pedido-id {
+        order: 1;
+      }
+
+      .pedido-main-info {
+        order: 2;
+      }
+
+      .pedido-valor {
+        order: 3;
+        text-align: left;
+        font-size: 1.75rem;
+      }
+
+      .pedido-status-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+
+      .pedido-status-badge {
+        justify-content: center;
+      }
+
+      .pedido-actions {
+        flex-direction: column;
+      }
+
+      .pedido-actions .btn {
+        width: 100%;
+        min-width: unset;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <img src="/images/Group 23.svg" alt="BRAGO Distribuidora" style="height: 35px; margin-right: 10px;">
+        Dashboard Gestor
+      </div>
+      
+      <nav class="nav-tabs">
+        <button class="nav-tab active" data-tab="dashboard">
+          <i class="fas fa-chart-line"></i>
+          Dashboard
+        </button>
+        <button class="nav-tab" data-tab="equipes">
+          <i class="fas fa-users"></i>
+          Equipes
+        </button>
+        <button class="nav-tab" data-tab="produtos" id="tab-btn-produtos">
+          <i class="fas fa-boxes"></i>
+          Produtos
+        </button>
+        <a href="/galeria.html" class="nav-tab" style="text-decoration: none;">
+          <i class="fas fa-images"></i>
+          Ver Galeria
+        </a>
+        <button class="nav-tab" data-tab="pedidos">
+          <i class="fas fa-shopping-cart"></i>
+          Pedidos
+        </button>
+        <button class="nav-tab" data-tab="usuarios" id="tab-btn-usuarios">
+          <i class="fas fa-user-cog"></i>
+          Usuários
+        </button>
+      </nav>
+      
+      <div class="user-info">
+        <span id="userGreeting">Carregando...</span>
+        <span id="userEquipesBadge" style="display: none;"></span>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i>
+          Sair
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- Tab Dashboard -->
+    <div class="tab-content active" id="tab-dashboard">
+      <!-- Cards de Resumo -->
+      <div class="dashboard-grid">
+        <div class="dashboard-card dashboard-card-primary">
+          <div class="dashboard-card-icon">
+            <i class="fas fa-store"></i>
+          </div>
+          <div class="dashboard-card-content">
+            <h3 id="totalEquipes">0</h3>
+            <p>Lojas Ativas</p>
+          </div>
+        </div>
+        
+        <div class="dashboard-card dashboard-card-success">
+          <div class="dashboard-card-icon">
+            <i class="fas fa-shopping-cart"></i>
+          </div>
+          <div class="dashboard-card-content">
+            <h3 id="totalPedidos">0</h3>
+            <p>Pedidos (30 dias)</p>
+          </div>
+        </div>
+        
+        <div class="dashboard-card dashboard-card-info">
+          <div class="dashboard-card-icon">
+            <i class="fas fa-dollar-sign"></i>
+          </div>
+          <div class="dashboard-card-content">
+            <h3 id="totalVendas">R$ 0,00</h3>
+            <p>Vendas (30 dias)</p>
+          </div>
+        </div>
+        
+        <div class="dashboard-card dashboard-card-warning">
+          <div class="dashboard-card-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="dashboard-card-content">
+            <h3 id="pedidosPendentes">0</h3>
+            <p>Aprovações Pendentes</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabela de Limites por Loja -->
+      <div class="table-container" style="margin-top: 2rem;">
+        <div class="card-header" style="margin: 0; padding: 1.5rem; border-bottom: 1px solid var(--gray-200);">
+          <h3 class="card-title">
+            <i class="fas fa-chart-bar"></i>
+            Limite de Crédito por Loja
+          </h3>
+          <button class="btn btn-secondary" onclick="carregarDashboard()">
+            <i class="fas fa-sync-alt"></i>
+            Atualizar
+          </button>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Loja</th>
+              <th style="text-align: right;">Limite Total</th>
+              <th style="text-align: right;">Limite Disponível</th>
+              <th style="text-align: right;">Limite Utilizado</th>
+              <th style="text-align: right;">Compras (30d)</th>
+              <th style="text-align: right;">Ticket Médio</th>
+              <th style="text-align: center;">Utilização</th>
+              <th style="text-align: center;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyDashboard"></tbody>
+        </table>
+      </div>
+
+      <!-- Pedidos Pendentes de Aprovação -->
+      <div class="table-container" style="margin-top: 2rem;" id="pedidosPendentesSection">
+        <div class="card-header" style="margin: 0; padding: 1.5rem; border-bottom: 1px solid var(--gray-200); background: #fff3cd;">
+          <h3 class="card-title" style="color: #856404;">
+            <i class="fas fa-clock"></i>
+            Pedidos Aguardando Aprovação
+          </h3>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Pedido</th>
+              <th>Loja</th>
+              <th style="text-align: right;">Valor</th>
+              <th>Data</th>
+              <th>Motivo</th>
+              <th style="text-align: center;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyPedidosPendentes"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab Equipes -->
+    <div class="tab-content" id="tab-equipes">
+      <!-- Botões de Ação (somente admin) -->
+      <div class="admin-actions" id="equipesAdminActions" style="display: none;">
+        <button class="btn btn-primary" onclick="abrirModalNovaEquipe()">
+          <i class="fas fa-plus-circle"></i> Nova Equipe
+        </button>
+        <button class="btn btn-secondary" onclick="abrirModalConsultarSaldo()">
+          <i class="fas fa-search-dollar"></i> Consultar Saldo
+        </button>
+      </div>
+
+      <div class="card modern-card">
+        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+          <h3 class="card-title">
+            <i class="fas fa-users"></i>
+            Equipes Cadastradas
+          </h3>
+          <button class="btn btn-secondary" onclick="carregarEquipes()" style="background: white; color: #667eea;">
+            <i class="fas fa-sync-alt"></i>
+            Recarregar
+          </button>
+        </div>
+        <div style="padding: 1.5rem;">
+          <!-- Container de Cards de Equipes -->
+          <div id="equipesCardsContainer" style="display: grid; gap: 1rem;">
+            <!-- Cards serão gerados via JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Produtos -->
+    <div class="tab-content" id="tab-produtos">
+      <!-- Botões de Ação (somente admin) -->
+      <div class="admin-actions" id="produtosAdminActions" style="display: none;">
+        <button class="btn btn-primary" onclick="toggleFormNovoProduto()">
+          <i class="fas fa-plus-circle"></i> Novo Produto
+        </button>
+      </div>
+
+      <div class="card" id="cardNovoProduto" style="display: none;">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-plus-circle"></i>
+            Cadastrar Novo Produto
+          </h3>
+          <button class="btn btn-sm btn-secondary" onclick="toggleFormNovoProduto()" type="button">
+            <i class="fas fa-times"></i> Fechar
+          </button>
+        </div>
+        <form id="formNovoProduto">
+          <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin: 0;">
+            <div class="form-group">
+              <label class="form-label">Código do Produto *</label>
+              <input type="text" class="form-input" id="codprod" placeholder="Ex: LMP001" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Descrição *</label>
+              <input type="text" class="form-input" id="descricao" placeholder="Ex: Detergente Neutro 5L" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Unidade *</label>
+              <select class="form-input" id="unidade" required>
+                <option value="UN">Unidade</option>
+                <option value="PCT">Pacote</option>
+                <option value="CX">Caixa</option>
+                <option value="FD">Fardo</option>
+                <option value="KG">Quilograma</option>
+                <option value="L">Litro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Múltiplos</label>
+              <input type="number" class="form-input" id="multiplos" value="1" min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Estoque</label>
+              <input type="number" class="form-input" id="estoque" step="0.001" value="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Preço (R$)</label>
+              <input type="number" class="form-input" id="preco" step="0.01" value="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">NCM</label>
+              <input type="text" class="form-input" id="ncm" placeholder="Ex: 3402.20.00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Categoria</label>
+              <select class="form-input" id="categoria">
+                <option value="limpeza">Limpeza</option>
+                <option value="higiene">Higiene</option>
+                <option value="descartaveis">Descartáveis</option>
+                <option value="equipamentos">Equipamentos</option>
+              </select>
+            </div>
+            <div class="form-group" style="border: 2px solid #e5e7eb; padding: 1rem; border-radius: 8px; background: #f9fafb;">
+              <label class="form-label" style="margin-bottom: 0.75rem; display: block;">
+                <i class="fas fa-tags"></i> Categorias de Acesso *
+              </label>
+              <div style="display: flex; gap: 1.5rem;">
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                  <input type="checkbox" id="categoria_facility" style="margin-right: 0.5rem; width: 18px; height: 18px;">
+                  <span style="font-weight: 500;">Facility</span>
+                </label>
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                  <input type="checkbox" id="categoria_manipulacao" style="margin-right: 0.5rem; width: 18px; height: 18px;">
+                  <span style="font-weight: 500;">Manipulação</span>
+                </label>
+              </div>
+              <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.5rem; display: block;">
+                Selecione pelo menos uma categoria para definir quem pode visualizar este produto
+              </small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Contrato OBA *</label>
+              <select class="form-input" id="cont_oba" required onchange="toggleEquipesSelection()">
+                <option value="N">Não - Acesso Livre</option>
+                <option value="S">Sim - Apenas Contratos</option>
+              </select>
+              <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                Se "Sim", apenas equipes com contrato terão acesso
+              </small>
+            </div>
+          </div>
+          
+          <!-- Seleção de Equipes (aparece apenas quando cont_oba = 'S') -->
+          <div id="equipesSelectorContainer" class="form-group" style="display: none; border: 2px solid #e5e7eb; padding: 1rem; border-radius: 8px; background: #f9fafb;">
+            <label class="form-label" style="margin-bottom: 0.75rem; display: block;">
+              <i class="fas fa-users"></i> Selecione as Equipes com Acesso
+            </label>
+            <div id="equipesCheckboxes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.5rem;">
+              <!-- Preenchido dinamicamente via JavaScript -->
+            </div>
+            <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.5rem; display: block;">
+              Marque as equipes que poderão visualizar este produto no menu
+            </small>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">URL da Foto</label>
+            <input type="url" class="form-input" id="foto" placeholder="https://exemplo.com/foto.jpg">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Observações</label>
+            <textarea class="form-input" id="observacoes" rows="3" placeholder="Informações adicionais sobre o produto"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i>
+            Salvar Produto
+          </button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-search"></i>
+            Buscar Produtos
+          </h3>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex: 1;">
+            <input type="text" class="form-input" id="searchProdutos" placeholder="Buscar por código ou descrição...">
+          </div>
+          <div class="form-group">
+            <select class="form-input" id="filterCategoria">
+              <option value="">Todas as categorias</option>
+              <option value="limpeza">Limpeza</option>
+              <option value="higiene">Higiene</option>
+              <option value="descartaveis">Descartáveis</option>
+              <option value="equipamentos">Equipamentos</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="buscarProdutos()">
+            <i class="fas fa-search"></i>
+            Buscar
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="table" id="tabelaProdutos">
+          <thead>
+            <tr>
+              <th data-sort="codprod" onclick="sortProdutosBy('codprod')" style="cursor: pointer;" title="Clique para ordenar">
+                Código <i class="fas fa-sort"></i>
+              </th>
+              <th data-sort="descricao" onclick="sortProdutosBy('descricao')" style="cursor: pointer;" title="Clique para ordenar">
+                Descrição <i class="fas fa-sort"></i>
+              </th>
+              <th data-sort="unidade" onclick="sortProdutosBy('unidade')" style="cursor: pointer;" title="Clique para ordenar">
+                Unidade <i class="fas fa-sort"></i>
+              </th>
+              <th data-sort="multiplos" onclick="sortProdutosBy('multiplos')" style="cursor: pointer;" title="Clique para ordenar">
+                Múltiplos <i class="fas fa-sort"></i>
+              </th>
+              <th data-sort="estoque" onclick="sortProdutosBy('estoque')" style="cursor: pointer;" title="Clique para ordenar">
+                Estoque <i class="fas fa-sort"></i>
+              </th>
+              <th data-sort="preco" onclick="sortProdutosBy('preco')" style="cursor: pointer;" title="Clique para ordenar">
+                Preço (R$) <i class="fas fa-sort"></i>
+              </th>
+              <th data-sort="categoria" onclick="sortProdutosBy('categoria')" style="cursor: pointer;" title="Clique para ordenar">
+                Categoria <i class="fas fa-sort"></i>
+              </th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyProdutos"></tbody>
+        </table>
+        <div class="pagination">
+          <div class="pagination-info" id="produtosPaginaInfo"></div>
+          <div class="pagination-controls">
+            <button class="btn btn-secondary btn-sm" id="produtosPrev">
+              <i class="fas fa-chevron-left"></i>
+              Anterior
+            </button>
+            <button class="btn btn-secondary btn-sm" id="produtosNext">
+              Próxima
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Pedidos -->
+    <div class="tab-content" id="tab-pedidos">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-filter"></i>
+            Filtros
+          </h3>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select class="form-input" id="selFiltroStatus">
+              <option value="" selected>TODOS</option>
+              <option value="PENDENTE_APROVACAO">PENDENTE APROVAÇÃO</option>
+              <option value="APROVADO">APROVADO</option>
+              <option value="AGUARDANDO">AGUARDANDO</option>
+              <option value="EM_SEPARACAO">EM SEPARAÇÃO</option>
+              <option value="EM_TRANSPORTE">EM TRANSPORTE</option>
+              <option value="SAIU_ENTREGA">SAIU PARA ENTREGA</option>
+              <option value="ENTREGUE">ENTREGUE</option>
+              <option value="CANCELADO">CANCELADO</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="carregarPedidos()">
+            <i class="fas fa-search"></i>
+            Filtrar
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtro de Equipes (apenas para gestores) -->
+      <div class="card" id="filtroEquipesPedidos" style="display: none;">
+        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+          <h3 class="card-title">
+            <i class="fas fa-store"></i>
+            Filtrar por Equipe
+          </h3>
+          <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.25rem;">
+            <span id="equipesFiltradasCount">0 equipes selecionadas</span>
+          </div>
+        </div>
+        <div style="padding: 1.5rem;">
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+            <button class="btn btn-secondary btn-sm" onclick="selecionarTodasEquipesFiltro()" style="flex: 1;">
+              <i class="fas fa-check-double"></i>
+              Selecionar Todas
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="limparEquipesFiltro()" style="flex: 1;">
+              <i class="fas fa-times"></i>
+              Limpar
+            </button>
+          </div>
+          <div id="equipesChecklistPedidos" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb;">
+            <!-- Checkboxes serão carregados via JS -->
+          </div>
+        </div>
+      </div>
+
+      <div class="card modern-card">
+        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+          <h3 class="card-title">
+            <i class="fas fa-shopping-cart"></i>
+            Pedidos
+          </h3>
+          <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.25rem;">
+            <span id="pedidosCountInfo">Carregando...</span>
+          </div>
+        </div>
+        <div style="padding: 1.5rem;">
+          <!-- Container de Cards de Pedidos -->
+          <div id="pedidosCardsContainer" class="pedidos-cards-container">
+            <!-- Cards serão gerados via JavaScript -->
+          </div>
+          
+          <!-- Paginação -->
+          <div class="pagination" style="margin-top: 1.5rem;">
+            <div class="pagination-info" id="pedidosPaginaInfo"></div>
+            <div class="pagination-controls">
+              <button class="btn btn-secondary btn-sm" id="pedidosPrev">
+                <i class="fas fa-chevron-left"></i>
+                Anterior
+              </button>
+              <button class="btn btn-secondary btn-sm" id="pedidosNext">
+                Próxima
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Usuários -->
+    <div class="tab-content" id="tab-usuarios">
+      <div class="card modern-card">
+        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+          <h3 class="card-title">
+            <i class="fas fa-user-plus"></i>
+            Adicionar Novo Usuário
+          </h3>
+        </div>
+        <form id="formNovoUsuario" style="padding: 2rem;">
+          <div class="modern-form-grid">
+            <div class="form-group modern-form-group">
+              <label class="form-label"><i class="fas fa-user"></i> Nome Completo *</label>
+              <input type="text" class="form-input modern-input" id="novoNome" placeholder="Digite o nome completo" required>
+            </div>
+            <div class="form-group modern-form-group">
+              <label class="form-label"><i class="fas fa-envelope"></i> Email *</label>
+              <input type="email" class="form-input modern-input" id="novoEmail" placeholder="email@exemplo.com" required>
+            </div>
+            <div class="form-group modern-form-group">
+              <label class="form-label"><i class="fas fa-lock"></i> Senha *</label>
+              <input type="password" class="form-input modern-input" id="novoSenha" placeholder="Mínimo 6 caracteres" required>
+            </div>
+            <div class="form-group modern-form-group">
+              <label class="form-label"><i class="fas fa-id-badge"></i> Perfil *</label>
+              <select class="form-input modern-input" id="novoPerfil" required onchange="window.handlePerfilChange && window.handlePerfilChange(this.value)">
+                <option value="admin">Administrador</option>
+                <option value="gestor">Gestor Comercial</option>
+                <option value="solicitante">Solicitante</option>
+                <option value="vendedor">Vendedor</option>
+              </select>
+            </div>
+            <div class="form-group modern-form-group" id="grupoEquipe">
+              <label class="form-label"><i class="fas fa-users"></i> Equipes <span id="equipeObrigatorio" style="display:none; color: #ef4444;">*</span></label>
+              <div class="equipes-selector">
+                <div id="equipesCheckboxes" class="equipes-checkboxes">
+                  <!-- Checkboxes serão carregados via JS -->
+                </div>
+                <div id="equipesSelecionadas" class="equipes-tags" style="margin-top: 0.75rem;">
+                  <!-- Tags das equipes selecionadas -->
+                </div>
+              </div>
+              <small style="color: #6b7280; font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                <i class="fas fa-info-circle"></i> Selecione uma ou mais equipes para este usuário
+              </small>
+            </div>
+            <div class="form-group modern-form-group" id="grupoCategoriaAcesso" style="display: none;">
+              <label class="form-label"><i class="fas fa-tags"></i> Categoria de Acesso <span style="color: #ef4444;">*</span></label>
+              <select class="form-input modern-input" id="novoCategoriaAcesso">
+                <option value="">Selecione...</option>
+                <option value="facility">Facility</option>
+                <option value="manipulacao">Manipulação</option>
+                <option value="ambas">Ambas (Facility + Manipulação)</option>
+              </select>
+              <small style="color: #6b7280; font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                <i class="fas fa-info-circle"></i> Define quais produtos este solicitante poderá visualizar
+              </small>
+            </div>
+            <div class="form-group modern-form-group">
+              <label class="form-label">
+                <i class="fas fa-bell"></i> Receber Notificações por Email
+              </label>
+              <label class="switch">
+                <input type="checkbox" id="novoRecebeEmail">
+                <span class="slider round"></span>
+              </label>
+              <small style="color: #6b7280; font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                <i class="fas fa-info-circle"></i> O usuário receberá emails sobre pedidos e atualizações
+              </small>
+            </div>
+          </div>
+          <div style="margin-top: 2rem; text-align: right;">
+            <button type="submit" class="btn btn-primary modern-btn">
+              <i class="fas fa-user-plus"></i>
+              Criar Usuário
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card modern-card">
+        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+          <h3 class="card-title">
+            <i class="fas fa-users-cog"></i>
+            Gerenciar Usuários
+          </h3>
+        </div>
+        <div style="padding: 1.5rem;">
+          <div class="form-row" style="gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="form-group" style="flex: 1; margin: 0;">
+              <input type="text" class="form-input modern-input" id="usrBusca" placeholder="🔍 Buscar por nome ou email...">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <select class="form-input modern-input" id="selFiltroPerfil">
+                <option value="">(todos os perfis)</option>
+                <option value="admin">Admin</option>
+                <option value="gestor">Gestor</option>
+                <option value="solicitante">Solicitante</option>
+                <option value="vendedor">Vendedor</option>
+              </select>
+            </div>
+            <button class="btn btn-primary modern-btn" onclick="buscarUsuarios()">
+              <i class="fas fa-search"></i>
+              Buscar
+            </button>
+          </div>
+
+          <!-- Container de Cards de Usuários -->
+          <div id="usuariosCardsContainer" style="display: grid; gap: 1rem; margin-bottom: 2rem;">
+            <!-- Cards serão gerados via JavaScript -->
+          </div>
+          
+          <div class="pagination">
+            <div class="pagination-info" id="usuariosPaginaInfo"></div>
+            <div class="pagination-controls">
+              <button class="btn btn-secondary btn-sm" id="usuariosPrev">
+                <i class="fas fa-chevron-left"></i>
+                Anterior
+              </button>
+              <button class="btn btn-secondary btn-sm" id="usuariosNext">
+                Próxima
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Informativo de Notificações -->
+      <div class="card modern-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; margin-bottom: 2rem;">
+        <div style="padding: 1.5rem;">
+          <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.75rem;">
+            <i class="fas fa-bell" style="font-size: 1.5rem;"></i>
+            <span>Usuários Recebendo Notificações por Email</span>
+          </h3>
+          <p style="margin: 0 0 1rem 0; opacity: 0.95;">
+            Os usuários abaixo estão configurados para receber notificações automáticas por email quando houver novos pedidos, aprovações ou atualizações no sistema.
+          </p>
+          <div id="infoUsuariosNotificacao" style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 8px;">
+            <p style="margin: 0;"><i class="fas fa-spinner fa-spin"></i> Carregando informações...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção de Teste - Adicionar Vendedor Rápido -->
+      <div class="card modern-card" style="border: 2px dashed #667eea;">
+        <div class="card-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none;">
+          <h3 class="card-title">
+            <i class="fas fa-flask"></i>
+            Teste - Adicionar Vendedor para Receber Emails
+          </h3>
+        </div>
+        <div style="padding: 1.5rem;">
+          <p style="color: #6b7280; margin-bottom: 1.5rem;">
+            <i class="fas fa-info-circle"></i>
+            Adicione rapidamente um usuário vendedor que receberá notificações de pedidos aprovados/rejeitados.
+          </p>
+          <form id="formVendedorRapido" style="display: flex; gap: 1rem; align-items: flex-end;">
+            <div class="form-group modern-form-group" style="flex: 2; margin: 0;">
+              <label class="form-label"><i class="fas fa-user"></i> Nome</label>
+              <input type="text" class="form-input modern-input" id="vendedorNome" placeholder="Nome do vendedor" required>
+            </div>
+            <div class="form-group modern-form-group" style="flex: 3; margin: 0;">
+              <label class="form-label"><i class="fas fa-envelope"></i> Email</label>
+              <input type="email" class="form-input modern-input" id="vendedorEmail" placeholder="email@exemplo.com" required>
+            </div>
+            <button type="submit" class="btn btn-success modern-btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none;">
+              <i class="fas fa-user-plus"></i>
+              Adicionar como Vendedor
+            </button>
+          </form>
+          <small style="color: #6b7280; display: block; margin-top: 1rem;">
+            <i class="fas fa-key"></i> Senha padrão: <strong>senha123</strong> (pode ser alterada depois na tabela acima)
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Galeria (Produtos por Equipe) -->
+  </main>
+
+  <!-- Modal Editar Produto -->
+  <!-- Modal Editar Produto (Dados Básicos) -->
+  <div id="modalEditarProduto" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <i class="fas fa-edit"></i>
+          Editar Produto
+        </h3>
+        <button class="modal-close" onclick="fecharModalProduto()">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="formEditarProduto">
+          <input type="hidden" id="editProdutoId">
+          <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin: 0;">
+            <div class="form-group">
+              <label class="form-label">Código do Produto *</label>
+              <input type="text" class="form-input" id="editCodprod" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Descrição *</label>
+              <input type="text" class="form-input" id="editDescricao" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Unidade *</label>
+              <select class="form-input" id="editUnidade" required>
+                <option value="UN">Unidade</option>
+                <option value="PCT">Pacote</option>
+                <option value="CX">Caixa</option>
+                <option value="FD">Fardo</option>
+                <option value="KG">Quilograma</option>
+                <option value="L">Litro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Múltiplos</label>
+              <input type="number" class="form-input" id="editMultiplos" min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Estoque</label>
+              <input type="number" class="form-input" id="editEstoque" step="0.001">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Preço (R$)</label>
+              <input type="number" class="form-input" id="editPreco" step="0.01">
+            </div>
+            <div class="form-group">
+              <label class="form-label">NCM</label>
+              <input type="text" class="form-input" id="editNcm">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Categoria</label>
+              <select class="form-input" id="editCategoria">
+                <option value="limpeza">Limpeza</option>
+                <option value="higiene">Higiene</option>
+                <option value="descartaveis">Descartáveis</option>
+                <option value="equipamentos">Equipamentos</option>
+              </select>
+            </div>
+            <div class="form-group" style="border: 2px solid #e5e7eb; padding: 1rem; border-radius: 8px; background: #f9fafb;">
+              <label class="form-label" style="margin-bottom: 0.75rem; display: block;">
+                <i class="fas fa-tags"></i> Categorias de Acesso *
+              </label>
+              <div style="display: flex; gap: 1.5rem;">
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                  <input type="checkbox" id="editCategoria_facility" style="margin-right: 0.5rem; width: 18px; height: 18px;">
+                  <span style="font-weight: 500;">Facility</span>
+                </label>
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                  <input type="checkbox" id="editCategoria_manipulacao" style="margin-right: 0.5rem; width: 18px; height: 18px;">
+                  <span style="font-weight: 500;">Manipulação</span>
+                </label>
+              </div>
+              <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.5rem; display: block;">
+                Selecione pelo menos uma categoria para definir quem pode visualizar este produto
+              </small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Contrato OBA *</label>
+              <select class="form-input" id="editCont_oba" required onchange="toggleEquipesSelectionEdit()">
+                <option value="N">Não - Acesso Livre</option>
+                <option value="S">Sim - Apenas Contratos</option>
+              </select>
+              <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                Se "Sim", apenas equipes com contrato terão acesso
+              </small>
+            </div>
+          </div>
+          
+          <!-- Seleção de Equipes no Modal Edição -->
+          <div id="editEquipesSelectorContainer" class="form-group" style="display: none; border: 2px solid #e5e7eb; padding: 1rem; border-radius: 8px; background: #f9fafb;">
+            <label class="form-label" style="margin-bottom: 0.75rem; display: block;">
+              <i class="fas fa-users"></i> Selecione as Equipes com Acesso
+            </label>
+            <div id="editEquipesCheckboxes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.5rem;">
+              <!-- Preenchido dinamicamente via JavaScript -->
+            </div>
+            <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.5rem; display: block;">
+              Marque as equipes que poderão visualizar este produto no menu
+            </small>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">URL da Foto</label>
+            <input type="url" class="form-input" id="editFoto">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Observações</label>
+            <textarea class="form-input" id="editObservacoes" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="fecharModalProduto()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarEdicaoProduto()">
+          <i class="fas fa-save"></i>
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Gerenciar Mídias -->
+  <div id="modalGerenciarMidias" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 1000px;">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <i class="fas fa-images"></i>
+          Gerenciar Mídias - <span id="produtoNomeMidias"></span>
+        </h3>
+        <button class="modal-close" onclick="fecharModalMidias()">×</button>
+      </div>
+      
+      <!-- Abas -->
+      <div class="tabs-container" style="padding: 0 20px;">
+        <div class="tabs">
+          <button class="tab-button active" onclick="mudarAba('imagens')">
+            <i class="fas fa-images"></i> Imagens
+          </button>
+          <button class="tab-button" onclick="mudarAba('videos')">
+            <i class="fas fa-video"></i> Vídeos
+          </button>
+          <button class="tab-button" onclick="mudarAba('especificacoes')">
+            <i class="fas fa-list"></i> Ficha Técnica
+          </button>
+        </div>
+      </div>
+      
+      <div class="modal-body">
+        <input type="hidden" id="midiaProdutoId">
+        
+        <!-- Aba Imagens -->
+        <div id="abaImagens" class="tab-content active">
+          <div style="margin-bottom: 20px;">
+            <button class="btn btn-primary" onclick="abrirModalAdicionarImagem()">
+              <i class="fas fa-plus"></i> Adicionar Imagem
+            </button>
+          </div>
+          <div id="listaImagens" class="galeria-imagens">
+            <!-- Preenchido dinamicamente -->
+          </div>
+        </div>
+        
+        <!-- Aba Vídeos -->
+        <div id="abaVideos" class="tab-content" style="display: none;">
+          <div style="margin-bottom: 20px;">
+            <button class="btn btn-primary" onclick="abrirModalAdicionarVideo()">
+              <i class="fas fa-plus"></i> Adicionar Vídeo
+            </button>
+          </div>
+          <div id="listaVideos">
+            <!-- Preenchido dinamicamente -->
+          </div>
+        </div>
+        
+        <!-- Aba Ficha Técnica -->
+        <div id="abaEspecificacoes" class="tab-content" style="display: none;">
+          <div style="margin-bottom: 20px;">
+            <button class="btn btn-primary" onclick="abrirModalAdicionarEspecificacao()">
+              <i class="fas fa-plus"></i> Adicionar Especificação
+            </button>
+          </div>
+          <div id="listaEspecificacoes">
+            <!-- Preenchido dinamicamente -->
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="fecharModalMidias()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Adicionar Imagem -->
+  <div id="modalAdicionarImagem" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fas fa-image"></i> Adicionar Imagem</h3>
+        <button class="modal-close" onclick="fecharModalAdicionarImagem()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">URL da Imagem *</label>
+          <input type="url" class="form-input" id="urlNovaImagem" required placeholder="https://exemplo.com/imagem.jpg">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Legenda</label>
+          <input type="text" class="form-input" id="legendaNovaImagem" placeholder="Descrição da imagem">
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="principalNovaImagem">
+            Definir como imagem principal
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="fecharModalAdicionarImagem()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarNovaImagem()">
+          <i class="fas fa-save"></i> Adicionar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Adicionar Vídeo -->
+  <div id="modalAdicionarVideo" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fas fa-video"></i> Adicionar Vídeo</h3>
+        <button class="modal-close" onclick="fecharModalAdicionarVideo()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">URL do Vídeo *</label>
+          <input type="url" class="form-input" id="urlNovoVideo" required placeholder="https://youtube.com/watch?v=...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Título</label>
+          <input type="text" class="form-input" id="tituloNovoVideo" placeholder="Título do vídeo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-input" id="tipoNovoVideo">
+            <option value="youtube">YouTube</option>
+            <option value="vimeo">Vimeo</option>
+            <option value="url_direta">URL Direta</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="fecharModalAdicionarVideo()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarNovoVideo()">
+          <i class="fas fa-save"></i> Adicionar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Adicionar/Editar Especificação -->
+  <div id="modalEspecificacao" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fas fa-list"></i> <span id="tituloModalEspec">Adicionar</span> Especificação</h3>
+        <button class="modal-close" onclick="fecharModalEspecificacao()">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="especId">
+        <div class="form-group">
+          <label class="form-label">Atributo *</label>
+          <input type="text" class="form-input" id="atributoEspec" required placeholder="Ex: Peso, Volume, Material">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Valor *</label>
+          <input type="text" class="form-input" id="valorEspec" required placeholder="Ex: 5kg, 1 litro, Plástico">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="fecharModalEspecificacao()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarEspecificacao()">
+          <i class="fas fa-save"></i> Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Detalhes do Pedido -->
+  <div class="modal" id="modalPedidoDetalhes" style="display: none;">
+    <div class="modal-content" style="max-width: 900px;">
+      <div class="modal-header">
+        <h3 class="modal-title">
+          <i class="fas fa-receipt"></i>
+          Detalhes do Pedido
+        </h3>
+        <button class="modal-close" onclick="fecharModalPedidoDetalhes()">&times;</button>
+      </div>
+      <div class="modal-body" id="pedidoModalContent">
+        <!-- Conteúdo será preenchido dinamicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Aprovação de Pedido -->
+  <div class="modal" id="modalAprovarPedido" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white;">
+        <h3 class="modal-title">
+          <i class="fas fa-check-circle"></i>
+          Aprovar Pedido
+        </h3>
+        <button class="modal-close" style="color: white;" onclick="fecharModalAprovar()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: #dcfce7; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+          <p style="margin: 0; color: #166534;">
+            <i class="fas fa-info-circle"></i>
+            <strong>Pedido #<span id="aprovarPedidoId"></span></strong> - <span id="aprovarEquipeNome"></span>
+          </p>
+          <p style="margin: 0.5rem 0 0 0; font-size: 1.25rem; font-weight: bold; color: #166534;">
+            Valor do Pedido: <span id="aprovarPedidoValor"></span>
+          </p>
+        </div>
+        
+        <!-- Informações de Crédito -->
+        <div style="background: #f3f4f6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+              <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">Limite Disponível Atual</p>
+              <p style="margin: 0.25rem 0 0 0; font-size: 1.125rem; font-weight: bold; color: #3b82f6;" id="aprovarLimiteDisponivel"></p>
+            </div>
+            <div>
+              <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">Faltante</p>
+              <p style="margin: 0.25rem 0 0 0; font-size: 1.125rem; font-weight: bold; color: #ef4444;" id="aprovarFaltante"></p>
+            </div>
+          </div>
+        </div>
+        
+        <div style="background: #fff3cd; padding: 1rem; border-radius: 8px; border-left: 4px solid #f59e0b; margin-bottom: 1rem;">
+          <p style="margin: 0; color: #92400e; font-weight: bold;">⚠️ Motivo da Pendência:</p>
+          <p style="margin: 0.5rem 0 0 0; color: #92400e;" id="aprovarMotivo"></p>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-arrow-up"></i>
+            Aumentar Limite da Loja (obrigatório se houver faltante)
+          </label>
+          <input type="number" class="form-input" id="aumentarLimiteValor" placeholder="Ex: 5000.00" step="0.01" min="0">
+          <small style="color: var(--gray-600); display: block; margin-top: 0.5rem;" id="sugestaoAumento">
+            💡 Sugestão: Aumente o limite em pelo menos <strong id="valorSugerido"></strong> para aprovar este pedido
+          </small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="fecharModalAprovar()">Cancelar</button>
+        <button class="btn btn-primary" onclick="confirmarAprovacao()" style="background: #22c55e;">
+          <i class="fas fa-check"></i>
+          Aprovar Pedido
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Rejeição de Pedido -->
+  <div class="modal" id="modalRejeitarPedido" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white;">
+        <h3 class="modal-title">
+          <i class="fas fa-times-circle"></i>
+          Rejeitar Pedido
+        </h3>
+        <button class="modal-close" style="color: white;" onclick="fecharModalRejeitar()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: #fee2e2; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+          <p style="margin: 0; color: #991b1b;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Pedido #<span id="rejeitarPedidoId"></span></strong> - <span id="rejeitarEquipeNome"></span>
+          </p>
+          <p style="margin: 0.5rem 0 0 0; font-size: 1.25rem; font-weight: bold; color: #991b1b;">
+            Valor: <span id="rejeitarPedidoValor"></span>
+          </p>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fas fa-comment"></i>
+            Motivo da Rejeição *
+          </label>
+          <textarea class="form-input" id="rejeitarMotivo" rows="4" placeholder="Explique o motivo da rejeição..." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="fecharModalRejeitar()">Cancelar</button>
+        <button class="btn btn-danger" onclick="confirmarRejeicao()">
+          <i class="fas fa-times"></i>
+          Rejeitar Pedido
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Proteção de autenticação IMEDIATA -->
+  <script>
+    (function() {
+      const token = localStorage.getItem('nexus_b2b_token');
+      if (!token) {
+        window.location.replace('/login.html');
+      }
+    })();
+  </script>
+  
+  <script src="js/gestor-equipes-produtos.js"></script>
+  <script src="js/gestor.js?v=20251203h"></script>
+  <script src="js/emails.js?v=20251204a"></script>
+  <script src="js/emails.js?v=20251204a"></script>
+  <script>
+    // Debug: verificar se função está disponível
+    setTimeout(function() {
+      console.log('⏰ Timeout 1s - Verificando função...');
+      console.log('🔍 window.handlePerfilChange disponível?', typeof window.handlePerfilChange);
+      
+      const novoPerfil = document.getElementById('novoPerfil');
+      const grupoCategoria = document.getElementById('grupoCategoriaAcesso');
+      console.log('📦 Elementos no timeout:', {
+        novoPerfil: !!novoPerfil,
+        grupoCategoria: !!grupoCategoria,
+        grupoCategoriaStyle: grupoCategoria ? grupoCategoria.style.display : 'N/A'
+      });
+      
+      // Teste manual
+      if (window.handlePerfilChange) {
+        console.log('🧪 Testando função com "solicitante"...');
+        window.handlePerfilChange('solicitante');
+      }
+    }, 1000);
+  </script>
+
+  <!-- Modal de Seleção de Equipes -->
+  <div id="modalEquipes" class="equipes-modal">
+    <div class="equipes-modal-content">
+      <div class="equipes-modal-header">
+        <h3><i class="fas fa-users"></i> Gerenciar Equipes</h3>
+        <button class="equipes-modal-close" onclick="fecharModalEquipes()">×</button>
+      </div>
+      <div class="equipes-modal-body">
+        <div id="modalEquipesCheckboxes" class="equipes-checkboxes">
+          <!-- Checkboxes carregados via JS -->
+        </div>
+        <div id="modalEquipesSelecionadas" class="equipes-tags" style="margin-top: 1rem;">
+          <!-- Tags mostradas aqui -->
+        </div>
+      </div>
+      <div class="equipes-modal-footer">
+        <button class="btn btn-secondary" onclick="fecharModalEquipes()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarEquipesModal()">
+          <i class="fas fa-save"></i> Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Nova Equipe -->
+  <div id="modalNovaEquipe" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3><i class="fas fa-store"></i> Cadastrar Nova Equipe</h3>
+        <button class="modal-close" onclick="fecharModalNovaEquipe()" type="button">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="formNovaEquipeModal" onsubmit="salvarNovaEquipe(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Nome da Equipe *</label>
+              <input type="text" class="form-input" id="nomeEquipe" required placeholder="Ex: 105 SUL">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Código ERP</label>
+              <input type="text" class="form-input" id="codigoErpEquipe" placeholder="Ex: 37461">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">CGC/CNPJ</label>
+              <input type="text" class="form-input" id="cgcEquipe" placeholder="Ex: 04.972.092/0075-69">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Limite de Crédito (R$) *</label>
+              <input type="number" class="form-input" id="limiteEquipe" step="0.01" required placeholder="1000.00">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Limite Mensal (R$)</label>
+              <input type="number" class="form-input" id="limiteMensalEquipe" step="0.01" placeholder="1000.00">
+              <small style="color: #999; margin-top: 4px; display: block;">Será resetado todo início de mês (não acumula sobras)</small>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="fecharModalNovaEquipe()">
+              <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Criar Equipe
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Consultar Saldo -->
+  <div id="modalConsultarSaldo" class="modal-overlay">
+    <div class="modal-container" style="max-width: 800px;">
+      <div class="modal-header">
+        <h3><i class="fas fa-search-dollar"></i> Consultar Saldo de Equipe</h3>
+        <button class="modal-close" onclick="fecharModalConsultarSaldo()" type="button">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Selecione a Equipe</label>
+          <select class="form-input" id="consultaEquipeSelect" onchange="consultarSaldoEquipe()">
+            <option value="">Selecione uma equipe...</option>
+          </select>
+        </div>
+        
+        <div id="resultadoConsultaSaldo" style="display: none;">
+          <div class="saldo-info-grid">
+            <div class="saldo-card">
+              <div class="saldo-label">💳 Limite Total</div>
+              <div class="saldo-valor" id="consultaLimiteTotal">R$ 0,00</div>
+            </div>
+            <div class="saldo-card">
+              <div class="saldo-label">✅ Disponível</div>
+              <div class="saldo-valor success" id="consultaLimiteDisponivel">R$ 0,00</div>
+            </div>
+            <div class="saldo-card">
+              <div class="saldo-label">📊 Utilizado</div>
+              <div class="saldo-valor danger" id="consultaLimiteUtilizado">R$ 0,00</div>
+            </div>
+            <div class="saldo-card">
+              <div class="saldo-label">📈 Utilização</div>
+              <div class="saldo-valor" id="consultaUtilizacao">0%</div>
+            </div>
+          </div>
+          
+          <div class="saldo-progress-container">
+            <div class="saldo-progress-bar">
+              <div id="consultaProgressBar" class="saldo-progress-fill" style="width: 0%">0%</div>
+            </div>
+          </div>
+          
+          <div class="saldo-detalhes">
+            <p><strong>🔄 Último Reset:</strong> <span id="consultaUltimoReset">-</span></p>
+            <p><strong>📋 Código ERP:</strong> <span id="consultaCodigoERP">-</span></p>
+            <p><strong>📄 CGC:</strong> <span id="consultaCGC">-</span></p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="fecharModalConsultarSaldo()">
+          <i class="fas fa-times"></i> Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

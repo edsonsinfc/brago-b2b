@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BRAGO Distribuidora - Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary-blue: #0033cc;
+      --orange: #ff6600;
+      --white: #ffffff;
+      --gray-light: #f5f5f5;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    body { 
+      font-family: 'Inter', sans-serif; 
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Background com imagem e overlay laranja */
+    .background-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 60%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    .background-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .background-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(255, 102, 0, 0.85) 0%, rgba(255, 140, 0, 0.75) 100%);
+      mix-blend-mode: multiply;
+    }
+
+    /* Texto sobre a imagem */
+    .hero-text {
+      position: absolute;
+      top: 50%;
+      left: 10%;
+      transform: translateY(-50%);
+      color: white;
+      z-index: 2;
+      max-width: 500px;
+    }
+
+    .hero-text h1 {
+      font-size: 4rem;
+      font-weight: 300;
+      line-height: 1.2;
+      margin-bottom: 0;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .hero-text h1 .highlight {
+      font-weight: 800;
+      font-style: italic;
+    }
+
+    /* Container do lado direito */
+    .login-container {
+      position: fixed;
+      right: 0;
+      top: 0;
+      width: 40%;
+      height: 100%;
+      background: var(--gray-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    /* Card de login azul */
+    .login-card {
+      background: var(--primary-blue);
+      border-radius: 40px;
+      padding: 60px 50px;
+      width: 90%;
+      max-width: 450px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .logo-container {
+      margin-bottom: 50px;
+      text-align: center;
+    }
+
+    .logo-container img {
+      max-width: 220px;
+      height: auto;
+      filter: brightness(0) invert(1);
+    }
+
+    /* Botão laranja */
+    .btn-entrar {
+      width: 100%;
+      padding: 18px;
+      background: var(--orange);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+      margin-top: 20px;
+    }
+
+    .btn-entrar:hover {
+      background: #ff7700;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+    }
+
+    .btn-entrar:active {
+      transform: translateY(0);
+    }
+
+    .btn-entrar:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Campos de input (invisíveis, apenas funcionais) */
+    .input-hidden {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    label { 
+      display: block; 
+      margin-top: 1.5rem; 
+      margin-bottom: 0.5rem;
+      font-weight: 500; 
+      color: white;
+      font-size: 0.9rem;
+    }
+
+    input { 
+      width: 100%; 
+      padding: 0.75rem 1rem; 
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      border-radius: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+    }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--orange);
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.2);
+    }
+
+    .form-group {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 15px 0 10px 0;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .checkbox-group label {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.85rem;
+      font-weight: 400;
+      cursor: pointer;
+    }
+
+    .forgot-password {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .forgot-password a {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: color 0.2s ease;
+    }
+
+    .forgot-password a:hover {
+      color: white;
+      text-decoration: underline;
+    }
+
+    #status {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: 500;
+      text-align: center;
+      font-size: 0.85rem;
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Responsividade */
+    @media (max-width: 1200px) {
+      .background-container {
+        width: 50%;
+      }
+      .login-container {
+        width: 50%;
+      }
+      .hero-text h1 {
+        font-size: 3rem;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .background-container {
+        width: 100%;
+      }
+      .background-overlay {
+        background: linear-gradient(135deg, rgba(255, 102, 0, 0.92) 0%, rgba(255, 140, 0, 0.85) 100%);
+      }
+      .login-container {
+        width: 100%;
+        background: transparent;
+      }
+      .hero-text {
+        display: none;
+      }
+      .login-card {
+        background: rgba(0, 51, 204, 0.95);
+        backdrop-filter: blur(10px);
+      }
+    }
+
+    @media (max-width: 500px) {
+      .login-card {
+        padding: 40px 30px;
+        border-radius: 30px;
+      }
+      .logo-container img {
+        max-width: 180px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background com imagem e overlay -->
+  <div class="background-container">
+    <img src="/images/homem-e-mulher-fazendo-compras-no-supermercado.jpg" alt="Background" class="background-image">
+    <div class="background-overlay"></div>
+  </div>
+
+  <!-- Texto Hero -->
+  <div class="hero-text">
+    <h1>
+      Uma maneira<br>
+      inovadora de<br>
+      <span class="highlight">comprar</span>
+    </h1>
+  </div>
+
+  <!-- Container de Login -->
+  <div class="login-container">
+    <div class="login-card">
+      <div class="logo-container">
+        <img src="/images/Group 21.svg" alt="BRAGO B2B Distribuidora">
+      </div>
+
+      <form id="formLogin">
+        <div class="form-group">
+          <label for="email">E-mail</label>
+          <input id="email" type="email" placeholder="seu-email@exemplo.com" autocomplete="username" required />
+        </div>
+
+        <div class="form-group">
+          <label for="senha">Senha</label>
+          <input id="senha" type="password" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="lembrarSenha" />
+          <label for="lembrarSenha">Lembrar senha</label>
+        </div>
+
+        <button type="submit" class="btn-entrar" id="btnLogin">
+          Entrar
+        </button>
+      </form>
+
+      <div class="forgot-password">
+        <a href="/forgot-password.html">Esqueci minha senha</a>
+      </div>
+
+      <div id="status"></div>
+    </div>
+  </div>
+      box-shadow: var(--shadow-lg);
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2rem 1rem;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .modal-header h3 {
+      color: var(--gray-800);
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--gray-500);
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+
+    .close-btn:hover {
+      background: var(--gray-100);
+      color: var(--gray-700);
+    }
+
+    .modal-body {
+      padding: 1rem 2rem 2rem;
+    }
+
+    .recovery-step p {
+      color: var(--gray-600);
+      margin: 0 0 1.5rem 0;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-container">
+    <img src="https://bragodistribuidora.com.br/wp-content/uploads/2023/09/logo-braggo-distribuidora-2.png" alt="BRAGO Distribuidora" style="max-width: 280px; width: 100%; height: auto; margin-bottom: 10px;">
+    <p class="subtitle">Sistema de Gestão Comercial</p>
+  </div>
+  
+  <div class="card">
+    <label for="email">E-mail</label>
+    <div class="input-group">
+      <i class="fas fa-envelope"></i>
+      <input id="email" type="email" placeholder="seu-email@exemplo.com" autocomplete="username" />
+    </div>
+
+    <label for="senha">Senha</label>
+    <div class="input-group">
+      <i class="fas fa-lock"></i>
+      <input id="senha" type="password" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+
+    <div style="margin: 0.75rem 0;">
+      <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: normal; margin: 0;">
+        <input type="checkbox" id="lembrarSenha" style="width: auto; margin: 0; cursor: pointer;" />
+        <span style="color: var(--gray-700); font-size: 0.9rem;">Lembrar senha</span>
+      </label>
+    </div>
+
+    <div class="row">
+      <button id="btnLogin">
+        <i class="fas fa-sign-in-alt"></i>
+        Entrar
+      </button>
+      <button id="btnLogout" class="secondary">
+        <i class="fas fa-sign-out-alt"></i>
+        Sair
+      </button>
+    </div>
+
+    <div class="forgot-password">
+      <a href="/forgot-password.html" id="linkEsqueciSenha">Esqueci minha senha</a>
+    </div>
+
+    <div id="status" style="margin-top:15px;"></div>
+
+    <!-- Seção de Debug (oculta por padrão) -->
+    <div id="debugSection" style="display: none;">
+      <h3><i class="fas fa-key"></i> Token JWT</h3>
+      <div class="row">
+        <button id="btnCopiar" class="secondary">
+          <i class="fas fa-copy"></i>
+          Copiar
+        </button>
+        <small id="copiado" style="opacity:.7;"></small>
+      </div>
+      <pre id="tokenBox">(vazio)</pre>
+
+      <h3><i class="fas fa-users"></i> Teste de rota protegida (GET /api/equipes)</h3>
+      <button id="btnEquipes">
+        <i class="fas fa-play"></i>
+        Chamar /api/equipes
+      </button>
+      <pre id="equipesBox">(sem dados)</pre>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+      <button id="btnToggleDebug" class="secondary" style="font-size: 0.8rem;">
+        <i class="fas fa-bug"></i>
+        Mostrar Debug
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const $ = sel => document.querySelector(sel);
+    const tokenKey = 'nexus_b2b_token';
+
+    function setToken(tok) {
+      if (tok) {
+        localStorage.setItem(tokenKey, tok);
+        $('#tokenBox').textContent = tok;
+        // Não mostrar status aqui - será mostrado no login()
+      } else {
+        localStorage.removeItem(tokenKey);
+        $('#tokenBox').textContent = '(vazio)';
+        $('#status').textContent = '';
+        $('#status').style.background = '';
+        $('#status').style.color = '';
+      }
+    }
+
+    function getToken() {
+      return localStorage.getItem(tokenKey);
+    }
+
+    // Carregar credenciais salvas ao iniciar
+    function carregarCredenciaisSalvas() {
+      const emailSalvo = localStorage.getItem('nexus_email_salvo');
+      const senhaLembrada = localStorage.getItem('nexus_lembrar_senha');
+      
+      if (emailSalvo && senhaLembrada === 'true') {
+        $('#email').value = emailSalvo;
+        $('#lembrarSenha').checked = true;
+      }
+    }
+
+    // Salvar/remover credenciais conforme checkbox
+    function gerenciarCredenciais(email) {
+      if ($('#lembrarSenha').checked) {
+        localStorage.setItem('nexus_email_salvo', email);
+        localStorage.setItem('nexus_lembrar_senha', 'true');
+      } else {
+        localStorage.removeItem('nexus_email_salvo');
+        localStorage.removeItem('nexus_lembrar_senha');
+      }
+    }
+
+    async function login() {
+      const email = $('#email').value.trim();
+      const senha = $('#senha').value.trim();
+      const btnLogin = $('#btnLogin');
+      
+      if (!email || !senha) {
+        $('#status').textContent = 'Preencha email e senha';
+        $('#status').style.background = 'rgba(220, 53, 69, 0.1)';
+        $('#status').style.color = 'var(--danger)';
+        $('#status').style.border = '1px solid rgba(220, 53, 69, 0.2)';
+        return;
+      }
+
+      try {
+        btnLogin.disabled = true;
+        btnLogin.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
+        
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, senha })
+        });
+        const data = await res.json();
+        
+        if (!res.ok) throw new Error(data.error || 'Falha no login');
+        
+        setToken(data.token);
+        
+        // Gerenciar credenciais salvas
+        gerenciarCredenciais(email);
+        
+        // Redirecionar baseado no perfil
+        const payload = JSON.parse(atob(data.token.split('.')[1]));
+        $('#status').textContent = 'Login realizado! Redirecionando...';
+        $('#status').style.background = 'rgba(0, 166, 80, 0.1)';
+        $('#status').style.color = 'var(--success)';
+        $('#status').style.border = '1px solid rgba(0, 166, 80, 0.2)';
+        
+        setTimeout(() => {
+          if (payload.perfil === 'admin' || payload.perfil === 'gestor') {
+            window.location.href = '/gestor.html';
+          } else if (payload.perfil === 'vendedor') {
+            window.location.href = '/vendedor.html';
+          } else if (payload.perfil === 'solicitante') {
+            window.location.href = '/equipe.html';
+          } else {
+            window.location.href = '/';
+          }
+        }, 500);
+      } catch (error) {
+        $('#status').textContent = error.message;
+        $('#status').style.background = 'rgba(220, 53, 69, 0.1)';
+        $('#status').style.color = 'var(--danger)';
+        $('#status').style.border = '1px solid rgba(220, 53, 69, 0.2)';
+      } finally {
+        btnLogin.disabled = false;
+        btnLogin.innerHTML = '<i class="fas fa-sign-in-alt"></i> Entrar';
+      }
+    }
+        $('#status').style.background = 'rgba(0, 166, 80, 0.1)';
+        $('#status').style.color = 'var(--success)';
+        $('#status').style.border = '1px solid rgba(0, 166, 80, 0.2)';
+        
+        setTimeout(() => {
+          if (payload.perfil === 'admin' || payload.perfil === 'gestor') {
+            window.location.href = '/gestor.html';
+          } else if (payload.perfil === 'vendedor') {
+            window.location.href = '/vendedor.html';
+          } else if (payload.perfil === 'solicitante') {
+            window.location.href = '/equipe.html';
+          } else {
+            window.location.href = '/';
+          }
+        }, 1000);
+        
+      } catch (e) {
+        $('#status').textContent = 'Erro: ' + e.message;
+        $('#status').style.background = 'rgba(220, 53, 69, 0.1)';
+        $('#status').style.color = 'var(--danger)';
+        $('#status').style.border = '1px solid rgba(220, 53, 69, 0.2)';
+      } finally {
+        btnLogin.disabled = false;
+        btnLogin.textContent = 'Entrar';
+      }
+    }
+
+    async function fetchEquipes() {
+      const tok = getToken();
+      if (!tok) return alert('Faça login primeiro');
+      const res = await fetch('/api/equipes', { headers: { 'Authorization': 'Bearer ' + tok } });
+      const data = await res.json();
+      $('#equipesBox').textContent = JSON.stringify(data, null, 2);
+    }
+
+    $('#btnLogin').addEventListener('click', login);
+    $('#btnLogout').addEventListener('click', () => { setToken(null); $('#equipesBox').textContent = '(sem dados)'; });
+    $('#btnEquipes').addEventListener('click', fetchEquipes);
+    $('#btnCopiar').addEventListener('click', async () => {
+      const tok = getToken();
+      if (!tok) return;
+      try { await navigator.clipboard.writeText(tok); $('#copiado').textContent = 'Copiado!'; setTimeout(()=> $('#copiado').textContent='', 1500); } catch {}
+    });
+
+    // Toggle debug section
+    $('#btnToggleDebug').addEventListener('click', () => {
+      const debugSection = $('#debugSection');
+      const toggleBtn = $('#btnToggleDebug');
+      if (debugSection.style.display === 'none') {
+        debugSection.style.display = 'block';
+        toggleBtn.innerHTML = '<i class="fas fa-bug"></i> Ocultar Debug';
+      } else {
+        debugSection.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="fas fa-bug"></i> Mostrar Debug';
+      }
+    });
+
+    // Enter key login
+    $('#email').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        $('#senha').focus();
+      }
+    });
+
+    $('#senha').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        login();
+      }
+    });
+
+    // Carregar token e credenciais salvas ao iniciar
+    const tokenAtual = getToken();
+    if (tokenAtual) {
+      $('#tokenBox').textContent = tokenAtual;
+    }
+    
+    // Carregar credenciais salvas
+    carregarCredenciaisSalvas();
+
+    // Toggle debug section
+    $('#btnToggleDebug').addEventListener('click', () => {
+      const debugSection = $('#debugSection');
+      const toggleBtn = $('#btnToggleDebug');
+      if (debugSection.style.display === 'none') {
+        debugSection.style.display = 'block';
+        toggleBtn.innerHTML = '<i class="fas fa-bug"></i> Ocultar Debug';
+      } else {
+        debugSection.style.display = 'none';
+        toggleBtn.innerHTML = '<i class="fas fa-bug"></i> Mostrar Debug';
+      }
+    });
+
+    // Enter key login (senha já tem, mas mantendo aqui como fallback)
+    $('#senha').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        login();
+      }
+    });
+
+    // init - removido setToken duplicado, já tratado em carregarCredenciaisSalvas
+  </script>
+</body>
+</html>

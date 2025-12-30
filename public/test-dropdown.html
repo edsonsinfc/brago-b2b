@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Dropdown Equipes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .login-form {
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button.secondary {
+            background: #2196F3;
+        }
+        button.secondary:hover {
+            background: #0b7dda;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .error {
+            border-left-color: #f44336 !important;
+            background: #ffebee !important;
+        }
+        .success {
+            border-left-color: #4CAF50 !important;
+            background: #e8f5e9 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste - Dropdown de Múltiplas Equipes</h1>
+        
+        <div class="login-form">
+            <h2>1. Selecione um usuário para testar:</h2>
+            <div class="form-group">
+                <label for="userSelect">Usuário:</label>
+                <select id="userSelect">
+                    <option value="">Selecione...</option>
+                    <option value="irineu.carvalho@redeoba.com.br">IRINEU DE CARVALHO (19 equipes)</option>
+                    <option value="kamila.werneck@redeoba.com.br">KAMILA MARIA WERNECK (19 equipes)</option>
+                    <option value="brenan.art@gmail.com">Brenan Art (19 equipes)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="password">Senha:</label>
+                <input type="password" id="password" placeholder="Digite a senha" value="123456">
+            </div>
+            <button onclick="fazerLogin()">Login e Testar API</button>
+            <button class="secondary" onclick="abrirPaginaEquipe()">Abrir Página de Equipe</button>
+        </div>
+        
+        <div id="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        let token = null;
+        let userId = null;
+
+        async function fazerLogin() {
+            const email = document.getElementById('userSelect').value;
+            const senha = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!email) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'error';
+                resultDiv.textContent = '❌ Por favor, selecione um usuário';
+                return;
+            }
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = '';
+            resultDiv.textContent = '⏳ Fazendo login...';
+            
+            try {
+                // Fazer login
+                const loginRes = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, senha })
+                });
+                
+                const loginData = await loginRes.json();
+                
+                if (!loginRes.ok) {
+                    throw new Error(loginData.error || 'Erro ao fazer login');
+                }
+                
+                token = loginData.token;
+                resultDiv.textContent += '\n✅ Login realizado com sucesso!\n';
+                
+                // Decodificar token para pegar ID
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                userId = payload.id;
+                resultDiv.textContent += `\n👤 User ID: ${userId}`;
+                resultDiv.textContent += `\n👤 Nome: ${payload.nome}`;
+                resultDiv.textContent += `\n📧 Email: ${payload.email}`;
+                resultDiv.textContent += `\n🏢 Perfil: ${payload.perfil}`;
+                
+                // Testar endpoint de equipes
+                resultDiv.textContent += '\n\n⏳ Buscando equipes do usuário...';
+                
+                const equipesRes = await fetch(`/api/usuarios/${userId}/equipes`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                
+                const equipesData = await equipesRes.json();
+                
+                if (!equipesRes.ok) {
+                    throw new Error(equipesData.error || 'Erro ao buscar equipes');
+                }
+                
+                resultDiv.textContent += `\n✅ Equipes carregadas: ${equipesData.equipes.length}\n`;
+                resultDiv.textContent += '\n📋 Lista de Equipes:\n';
+                resultDiv.textContent += '='.repeat(80) + '\n';
+                
+                equipesData.equipes.forEach((eq, idx) => {
+                    resultDiv.textContent += `\n${idx + 1}. ${eq.nome}`;
+                    resultDiv.textContent += `\n   ID: ${eq.id}`;
+                    if (eq.codigo_erp) resultDiv.textContent += ` | Código ERP: ${eq.codigo_erp}`;
+                    resultDiv.textContent += `\n   Limite de Crédito: R$ ${eq.limite_credito}`;
+                    resultDiv.textContent += `\n   Limite Disponível: R$ ${eq.limite_disponivel}`;
+                    resultDiv.textContent += `\n   Utilizado: R$ ${eq.utilizado}`;
+                    resultDiv.textContent += '\n';
+                });
+                
+                resultDiv.className = 'success';
+                resultDiv.textContent += '\n' + '='.repeat(80);
+                resultDiv.textContent += '\n✅ SUCESSO! O endpoint está funcionando!';
+                resultDiv.textContent += '\n\n💡 Agora você pode clicar em "Abrir Página de Equipe" para testar o dropdown.';
+                
+                // Salvar token no localStorage para usar na próxima página
+                localStorage.setItem('nexus_b2b_token', token);
+                
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.textContent += '\n\n❌ ERRO: ' + error.message;
+                console.error('Erro:', error);
+            }
+        }
+        
+        function abrirPaginaEquipe() {
+            const email = document.getElementById('userSelect').value;
+            if (!email) {
+                alert('Por favor, faça login primeiro');
+                return;
+            }
+            
+            if (!token) {
+                alert('Por favor, faça login primeiro clicando em "Login e Testar API"');
+                return;
+            }
+            
+            // Abrir página de equipe em nova aba
+            window.open('/equipe.html', '_blank');
+        }
+    </script>
+</body>
+</html>
