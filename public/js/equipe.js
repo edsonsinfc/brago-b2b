@@ -422,7 +422,7 @@ var app = {
       var precoFormatado = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-      }).format(produto.preco);
+      }).format(produto.preco).replace(/\u00A0/g, ' '); // Correção de encoding
       priceHtml = '<div class="product-price">' + precoFormatado + '</div>';
     }
     
@@ -638,7 +638,7 @@ var app = {
         var valorItemFormatado = new Intl.NumberFormat('pt-BR', {
           style: 'currency',
           currency: 'BRL'
-        }).format(valorItem);
+        }).format(valorItem).replace(/\u00A0/g, ' '); // Correção de encoding
         
         html += '<div class="cart-item">' +
           '<div class="cart-item-info">' +
@@ -679,7 +679,7 @@ var app = {
       var valorTotalFormatado = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-      }).format(valorTotalCarrinho);
+      }).format(valorTotalCarrinho).replace(/\u00A0/g, ' '); // Correção de encoding
       
       // Verificar se há limite disponível e se foi ultrapassado
       var limiteDisponivel = parseFloat(window.limiteDisponivel) || 0;
@@ -790,7 +790,7 @@ var app = {
       var valorFormatado = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-      }).format(valorTotal);
+      }).format(valorTotal).replace(/\u00A0/g, ' ');
       
       var mensagem = '🚫 PEDIDO BLOQUEADO - SEM LIMITE DISPONÍVEL\n\n';
       mensagem += '💰 Valor do pedido: ' + valorFormatado + '\n\n';
@@ -798,7 +798,7 @@ var app = {
       
       for (var i = 0; i < equipesSemLimite.length; i++) {
         var prob = equipesSemLimite[i];
-        var limiteFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prob.limite);
+        var limiteFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prob.limite).replace(/\u00A0/g, ' ');
         mensagem += '• ' + prob.equipe.nome + ': ' + limiteFormatado + '\n';
       }
       
@@ -812,7 +812,7 @@ var app = {
       var valorFormatado = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-      }).format(valorTotal);
+      }).format(valorTotal).replace(/\u00A0/g, ' ');
       
       var mensagem = '⚠️ ATENÇÃO: ALGUMAS LOJAS SEM LIMITE\n\n';
       mensagem += '💰 Valor do pedido: ' + valorFormatado + '\n\n';
@@ -820,12 +820,12 @@ var app = {
       
       for (var i = 0; i < equipesSemLimite.length; i++) {
         var prob = equipesSemLimite[i];
-        var limiteFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prob.limite);
+        var limiteFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prob.limite).replace(/\u00A0/g, ' ');
         mensagem += '• ' + prob.equipe.nome;
         if (prob.limite <= 0) {
           mensagem += ' (sem crédito)\n';
         } else {
-          mensagem += ' (faltam ' + new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prob.excedente) + ')\n';
+          mensagem += ' (faltam ' + new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prob.excedente).replace(/\u00A0/g, ' ') + ')\n';
         }
       }
       
@@ -866,20 +866,20 @@ var app = {
       var valorFormatado = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-      }).format(valorTotal);
+      }).format(valorTotal).replace(/\u00A0/g, ' ');
       
       var mensagem = '⚠️ ATENÇÃO: LIMITE DE CRÉDITO ⚠️\n\n';
       mensagem += '💰 Valor do pedido: ' + valorFormatado + '\n\n';
       
       if (equipesComProblema.length === 1) {
         var prob = equipesComProblema[0];
-        var limiteFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prob.limite);
+        var limiteFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prob.limite).replace(/\u00A0/g, ' ');
         
         if (prob.limite <= 0) {
           mensagem += '🚫 Loja: ' + prob.equipe.nome + '\n';
           mensagem += '   Sem limite disponível (' + limiteFormatado + ')\n\n';
         } else {
-          var excedenteFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prob.excedente);
+          var excedenteFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prob.excedente).replace(/\u00A0/g, ' ');
           mensagem += '📊 Loja: ' + prob.equipe.nome + '\n';
           mensagem += '   Limite: ' + limiteFormatado + '\n';
           mensagem += '   Excedente: ' + excedenteFormatado + '\n\n';
@@ -888,7 +888,7 @@ var app = {
         mensagem += '📋 Lojas com limite insuficiente:\n\n';
         for (var i = 0; i < equipesComProblema.length; i++) {
           var prob = equipesComProblema[i];
-          var limiteFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prob.limite);
+          var limiteFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prob.limite).replace(/\u00A0/g, ' ');
           mensagem += '• ' + prob.equipe.nome + ' (Limite: ' + limiteFormatado + ')\n';
         }
         mensagem += '\n';
@@ -1182,20 +1182,20 @@ var app = {
           
           console.log('💰 Limite armazenado globalmente:', window.limiteDisponivel);
           
-          // Formatar valores em reais
+          // Formatar valores em reais e remover caracteres non-breaking space
           var valorFormatado = new Intl.NumberFormat('pt-BR', {
             style: 'currency',
             currency: 'BRL'
-          }).format(limiteDisponivel);
+          }).format(limiteDisponivel).replace(/\u00A0/g, ' ');
           
           creditoDisponivel.innerHTML = valorFormatado;
           creditoInfo.style.display = 'flex';
           
-          // Adicionar tooltip com informações completas
+          // Adicionar tooltip com informações completas e formatação segura
           creditoInfo.title = 'Limite Total: ' + new Intl.NumberFormat('pt-BR', {
             style: 'currency',
             currency: 'BRL'
-          }).format(limiteTotal) + '\nDisponível: ' + valorFormatado;
+          }).format(limiteTotal).replace(/\u00A0/g, ' ') + '\nDisponível: ' + valorFormatado;
           
           console.log('✅ Crédito exibido:', valorFormatado);
           
@@ -1324,7 +1324,7 @@ var app = {
         '<div class="equipe-dropdown-limite">' +
           '<span class="equipe-dropdown-limite-label">Limite Disponível:</span>' +
           '<span class="' + classeValor + '">' +
-            new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(limiteDisponivel) +
+            new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(limiteDisponivel).replace(/\u00A0/g, ' ') +
           '</span>' +
         '</div>';
       
@@ -1369,7 +1369,7 @@ var app = {
       creditoDisponivel.innerHTML = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-      }).format(limiteDisponivel);
+      }).format(limiteDisponivel).replace(/\u00A0/g, ' '); // Correção de encoding
       
       console.log('💰 Limite atualizado:', limiteDisponivel);
     }
@@ -1457,7 +1457,7 @@ var app = {
         '<div class="equipe-selecao-limite">' +
           '<span class="equipe-selecao-limite-label">Limite Disponível</span>' +
           '<span class="' + classeValor + '">' +
-            new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(limiteDisponivel) +
+            new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(limiteDisponivel).replace(/\u00A0/g, ' ') +
           '</span>' +
         '</div>';
       
@@ -1606,7 +1606,7 @@ var app = {
       // Atualizar texto do header para indicar múltiplas lojas
       var equipeNomeAtual = document.getElementById('equipeNomeAtual');
       if (equipeNomeAtual) {
-        equipeNomeAtual.innerHTML = this.equipesSelecionadas.length + ' Lojas Selecionadas';
+        equipeNomeAtual.textContent = this.equipesSelecionadas.length + ' Lojas Selecionadas';
       }
     }
     
@@ -1681,7 +1681,7 @@ var app = {
     var valorFormatado = new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
-    }).format(pedido.valor_total);
+    }).format(pedido.valor_total).replace(/\u00A0/g, ' '); // Correção de encoding
     
     var podeCancelar = pedido.status === 'AGUARDANDO';
     
@@ -1764,7 +1764,7 @@ var app = {
     var valorTotal = new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
-    }).format(pedido.valor_total);
+    }).format(pedido.valor_total).replace(/\u00A0/g, ' '); // Correção de encoding
     
     var data_pedido = new Date(pedido.data).toLocaleString('pt-BR', {
       day: '2-digit',
@@ -1824,12 +1824,12 @@ var app = {
       var valorUnit = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-      }).format(item.valor_unitario || 0);
+      }).format(item.valor_unitario || 0).replace(/\u00A0/g, ' '); // Correção de encoding
       
       var valorTotalItem = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-      }).format((item.valor_unitario || 0) * (item.quantidade || 0));
+      }).format((item.valor_unitario || 0) * (item.quantidade || 0)).replace(/\u00A0/g, ' '); // Correção de encoding
       
       html += '<tr>' +
         '<td class="item-codigo">' + item.codprod + '</td>' +

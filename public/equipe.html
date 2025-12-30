@@ -80,6 +80,7 @@
       align-items: center;
       gap: 1rem;
     }
+
     .modal-header-selecao .acoes-selecao {
       display: flex;
       gap: 0.5rem;
@@ -142,7 +143,7 @@
     }
 
     .credito-info.multiple-stores::after {
-      content: 'â–¼';
+      content: '▼';
       position: absolute;
       right: 0.75rem;
       top: 50%;
@@ -220,7 +221,7 @@
     }
 
     .equipe-dropdown-item.selected .equipe-dropdown-nome::before {
-      content: 'âœ“ ';
+      content: '✓ ';
       color: #10b981;
       font-weight: bold;
       margin-right: 0.5rem;
@@ -270,7 +271,7 @@
       color: #f59e0b;
     }
 
-    /* Modal de SeleÃ§Ã£o de Equipe */
+    /* Modal de Seleção de Equipe */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -1181,46 +1182,6 @@
       #userGreeting {
         font-size: 0.9rem;
       }
-    .modal-header-selecao .acoes-selecao {
-      display: flex;
-      gap: 0.5rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .modal-header-selecao .btn-acao-selecao {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      padding: 0.4rem 1rem;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .modal-header-selecao .btn-acao-selecao:hover {
-      background: rgba(255, 255, 255, 0.3);
-      border-color: rgba(255, 255, 255, 0.5);
-      transform: translateY(-1px);
-    }
-
-    .contador-selecao {
-      text-align: center;
-      font-size: 0.95rem;
-      color: #6b7280;
-    }
-
-    .contador-selecao strong {
-      color: #10b981;
-      font-size: 1.1rem;
-    }
-
-    .botoes-footer {
-      display: flex;
-      justify-content: center;
-    }
-
 
       .credito-info {
         width: 100%;
@@ -1263,7 +1224,7 @@
                 <i class="fas fa-store"></i> Selecione a Loja para o Pedido
               </div>
               <div id="equipesDropdownList">
-                <!-- Lista serÃ¡ preenchida via JS -->
+                <!-- Lista será preenchida via JS -->
               </div>
             </div>
           </div>
@@ -1297,7 +1258,7 @@
               <option value="">Todas as categorias</option>
               <option value="limpeza">Produtos de Limpeza</option>
               <option value="higiene">Higiene</option>
-              <option value="descartaveis">DescartÃ¡veis</option>
+              <option value="descartaveis">Descartáveis</option>
               <option value="equipamentos">Equipamentos</option>
             </select>
           </div>
@@ -1328,7 +1289,7 @@
         <div id="emptyPedidos" class="empty-state" style="display: none;">
           <i class="fas fa-inbox"></i>
           <p>Nenhum pedido encontrado</p>
-          <small>FaÃ§a seu primeiro pedido adicionando produtos ao carrinho</small>
+          <small>Faça seu primeiro pedido adicionando produtos ao carrinho</small>
         </div>
       </div>
 
@@ -1356,16 +1317,16 @@
               </button>
               <button id="checkoutBtn" class="checkout-btn">
                 <i class="fas fa-paper-plane"></i>
-                Realizar SolicitaÃ§Ã£o
+                Realizar Solicitação
               </button>
               <small style="display: block; margin-top: 0.5rem; color: #6c757d; text-align: center; font-size: 0.85rem;">
-                ðŸ“§ O gestor receberÃ¡ automaticamente uma notificaÃ§Ã£o da sua solicitaÃ§Ã£o
+                O gestor receberá automaticamente uma notificação da sua solicitação
               </small>
             </div>
             <div id="emptyCart" class="empty-cart">
               <i class="fas fa-shopping-cart"></i>
-              <p>Seu carrinho estÃ¡ vazio</p>
-              <small>Adicione produtos para comeÃ§ar</small>
+              <p>Seu carrinho está vazio</p>
+              <small>Adicione produtos para começar</small>
             </div>
           </div>
         </div>
@@ -1381,7 +1342,7 @@
         <button class="modal-close" onclick="app.fecharModalProduto()">&times;</button>
       </div>
       <div class="modal-body" id="produtoModalContent">
-        <!-- ConteÃºdo carregado dinamicamente -->
+        <!-- Conteúdo carregado dinamicamente -->
       </div>
     </div>
   </div>
@@ -1394,12 +1355,12 @@
         <button class="modal-close" onclick="app.fecharModalPedido()">&times;</button>
       </div>
       <div class="modal-body" id="pedidoModalContent">
-        <!-- ConteÃºdo carregado dinamicamente -->
+        <!-- Conteúdo carregado dinamicamente -->
       </div>
     </div>
   </div>
 
-  <!-- ProteÃ§Ã£o de autenticaÃ§Ã£o IMEDIATA -->
+  <!-- Proteção de autenticação IMEDIATA -->
   <script>
     (function() {
       const token = localStorage.getItem('nexus_b2b_token');
@@ -1451,8 +1412,3 @@
   </div>
 </body>
 </html>
-
-
-
-
-
