@@ -1188,7 +1188,7 @@ var app = {
             currency: 'BRL'
           }).format(limiteDisponivel);
           
-          creditoDisponivel.textContent = valorFormatado;
+          creditoDisponivel.innerHTML = valorFormatado;
           creditoInfo.style.display = 'flex';
           
           // Adicionar tooltip com informações completas
@@ -1358,7 +1358,7 @@ var app = {
     
     // Atualizar nome da equipe no header
     if (equipeNomeAtual) {
-      equipeNomeAtual.textContent = this.equipeSelecionada.nome;
+      equipeNomeAtual.innerHTML = this.equipeSelecionada.nome;
     }
     
     // Atualizar valor do crédito
@@ -1366,7 +1366,7 @@ var app = {
       var limiteDisponivel = parseFloat(this.equipeSelecionada.limite_disponivel || 0);
       window.limiteDisponivel = limiteDisponivel;
       
-      creditoDisponivel.textContent = new Intl.NumberFormat('pt-BR', {
+      creditoDisponivel.innerHTML = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
       }).format(limiteDisponivel);
@@ -1606,7 +1606,7 @@ var app = {
       // Atualizar texto do header para indicar múltiplas lojas
       var equipeNomeAtual = document.getElementById('equipeNomeAtual');
       if (equipeNomeAtual) {
-        equipeNomeAtual.textContent = this.equipesSelecionadas.length + ' Lojas Selecionadas';
+        equipeNomeAtual.innerHTML = this.equipesSelecionadas.length + ' Lojas Selecionadas';
       }
     }
     
