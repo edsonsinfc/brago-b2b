@@ -8,6 +8,25 @@ const emailService = require('../services/emailService');
 
 const router = express.Router();
 
+// Cache temporário para agrupar pedidos de lote
+// Formato: { 'LOTE-123': { count: 5, expected: 5, pedidos: [...], gestorEmail: 'x@y.com' } }
+const loteCache = new Map();
+const LOTE_TIMEOUT = 30000; // 30 segundos para completar um lote
+
+// Função auxiliar para enviar email de lote agrupado
+async function enviarEmailLote(loteId, lote) {
+  try {
+    console.log(`📨 Enviando email agrupado do lote ${loteId} para ${lote.gestorEmail}`);
+    await emailService.enviarSolicitacaoAprovacaoLote({
+      pedidos: lote.pedidos,
+      gestorEmail: lote.gestorEmail
+    });
+    console.log(`✅ Email de lote enviado com sucesso! (${lote.pedidos.length} pedidos)`);
+  } catch (error) {
+    console.error('❌ Erro ao enviar email de lote:', error);
+  }
+}
+
 router.use(authenticate);
 router.use(verificarResetMensal);
 
@@ -21,10 +40,14 @@ router.post('/', requireRole('admin', 'gestor', 'solicitante'), async (req, res)
   console.log('✅ Conexão obtida do pool');
   
   try {
-    const { equipe_id, itens = [] } = req.body || {};
+    const { equipe_id, itens = [], lote_pedido } = req.body || {};
     if (!equipe_id || !Array.isArray(itens) || itens.length === 0) {
       console.log('❌ Validação falhou: equipe_id ou itens inválidos');
       return res.status(400).json({ error: 'Informe equipe_id e itens' });
+    }
+    
+    if (lote_pedido) {
+      console.log('🗂️ Pedido faz parte do lote:', lote_pedido);
     }
 
     // Validar itens - quantidade e valor unitário devem ser positivos
@@ -47,14 +70,25 @@ router.post('/', requireRole('admin', 'gestor', 'solicitante'), async (req, res)
       }
     }
 
-    // Segurança: se usuário for 'solicitante', só pode criar para a própria equipe
-    if (req.user && req.user.perfil === 'solicitante' && req.user.equipe_id && Number(req.user.equipe_id) !== Number(equipe_id)) {
-      console.log('❌ Equipe não autorizada:', req.user.equipe_id, '!==', equipe_id);
-      return res.status(403).json({ error: 'Equipe não autorizada para este pedido' });
-    }
-
     console.log('🔄 Iniciando transação...');
     await conn.beginTransaction();
+    
+    // Segurança: se usuário for 'solicitante', verificar se tem permissão para a equipe
+    if (req.user && req.user.perfil === 'solicitante') {
+      // Verificar se o usuário tem acesso a essa equipe via usuarios_equipes
+      const [equipePermitida] = await conn.execute(
+        'SELECT equipe_id FROM usuarios_equipes WHERE usuario_id = ? AND equipe_id = ?',
+        [req.user.id, equipe_id]
+      );
+      
+      if (equipePermitida.length === 0) {
+        console.log('❌ Equipe não autorizada para o usuário:', req.user.id, 'equipe:', equipe_id);
+        await conn.rollback();
+        return res.status(403).json({ error: 'Você não tem permissão para criar pedidos para esta equipe' });
+      }
+      
+      console.log('✅ Usuário tem permissão para a equipe:', equipe_id);
+    }
 
     // Buscar informações da equipe incluindo limites, codigo_erp e cgc
     const [[eq]] = await conn.execute(
@@ -129,8 +163,8 @@ router.post('/', requireRole('admin', 'gestor', 'solicitante'), async (req, res)
 
     console.log('💾 Inserindo pedido no banco com status:', statusPedido);
     const [r] = await conn.execute(
-      'INSERT INTO pedidos (equipe_id, criado_por, valor_total, data, status, saldo_restante, origem, data_confirmacao, motivo_pendencia, codigo_erp, cgc) VALUES (?, ?, ?, NOW(), ?, ?, ?, NOW(), ?, ?, ?)',
-      [equipe_id, req.user.id, valor_total, statusPedido, (eq.saldo_atual - valor_total), 'Local', motivoPendencia, eq.codigo_erp, eq.cgc]
+      'INSERT INTO pedidos (equipe_id, criado_por, valor_total, data, status, saldo_restante, origem, data_confirmacao, motivo_pendencia, codigo_erp, cgc, lote_pedido) VALUES (?, ?, ?, NOW(), ?, ?, ?, NOW(), ?, ?, ?, ?)',
+      [equipe_id, req.user.id, valor_total, statusPedido, (eq.saldo_atual - valor_total), 'Local', motivoPendencia, eq.codigo_erp, eq.cgc, lote_pedido]
     );
     const pedidoId = r.insertId;
     console.log('✅ Pedido inserido com ID:', pedidoId);
@@ -179,15 +213,56 @@ router.post('/', requireRole('admin', 'gestor', 'solicitante'), async (req, res)
       
       // Pedido PENDENTE: enviar email APENAS para o GESTOR
       if (equipeInfo && equipeInfo.gestor_email) {
-        console.log('📧 Enviando email de solicitação de aprovação para o GESTOR:', equipeInfo.gestor_email);
-        await emailService.enviarSolicitacaoAprovacao({
-          pedido: pedidoCompleto,
-          equipe: equipeInfo,
-          itens: itens,
-          vendedorEmail: equipeInfo.gestor_email,
-          motivoPendencia: motivoPendencia
-        });
-        console.log('✅ Email de solicitação enviado para o gestor!');
+        // Se é pedido de lote, agrupar emails
+        if (lote_pedido) {
+          console.log('🗂️ Pedido faz parte do lote:', lote_pedido);
+          
+          if (!loteCache.has(lote_pedido)) {
+            loteCache.set(lote_pedido, {
+              pedidos: [],
+              gestorEmail: equipeInfo.gestor_email,
+              timeout: setTimeout(() => {
+                console.log('⏰ Timeout do lote:', lote_pedido);
+                const lote = loteCache.get(lote_pedido);
+                if (lote) {
+                  enviarEmailLote(lote_pedido, lote);
+                  loteCache.delete(lote_pedido);
+                }
+              }, LOTE_TIMEOUT)
+            });
+          }
+          
+          const lote = loteCache.get(lote_pedido);
+          lote.pedidos.push({
+            pedido: pedidoCompleto,
+            equipe: equipeInfo,
+            itens: itens
+          });
+          
+          console.log(`📦 Pedido #${pedidoId} adicionado ao lote (${lote.pedidos.length} pedidos)`);
+          
+          // Verificar se já recebemos todos os pedidos do lote
+          // Como não sabemos quantos virão, enviamos após um timeout ou quando o frontend avisar
+          // Por enquanto, vamos enviar após 5 segundos do último pedido adicionado
+          clearTimeout(lote.timeout);
+          lote.timeout = setTimeout(async () => {
+            console.log(`📨 Enviando email agrupado para lote ${lote_pedido} com ${lote.pedidos.length} pedidos`);
+            await enviarEmailLote(lote_pedido, lote);
+            loteCache.delete(lote_pedido);
+          }, 2000); // 2 segundos após o último pedido
+          
+        } else {
+          // Pedido individual - enviar email normal
+          console.log('📧 Enviando email de solicitação de aprovação para o GESTOR:', equipeInfo.gestor_email);
+          await emailService.enviarSolicitacaoAprovacao({
+            pedido: pedidoCompleto,
+            equipe: equipeInfo,
+            itens: itens,
+            vendedorEmail: equipeInfo.gestor_email,
+            motivoPendencia: motivoPendencia
+          });
+          console.log('✅ Email de solicitação enviado para o gestor!');
+        }
       } else {
         console.log('⚠️  Email não enviado: gestor_email não configurado');
       }
@@ -221,7 +296,7 @@ router.post('/', requireRole('admin', 'gestor', 'solicitante'), async (req, res)
 
 // Listar pedidos
 router.get('/', requireRole('admin', 'gestor', 'solicitante'), async (req, res) => {
-  let { status, equipe_id } = req.query;
+  let { status, equipe_id, lote } = req.query;
   let page = parseInt(req.query.page || '1', 10);
   let pageSize = parseInt(req.query.pageSize || '20', 10);
   if (!Number.isFinite(page) || page < 1) page = 1;
@@ -232,11 +307,23 @@ router.get('/', requireRole('admin', 'gestor', 'solicitante'), async (req, res) 
   const vals = [];
   if (status) { where.push('p.status = ?'); vals.push(status); }
   if (equipe_id) { where.push('p.equipe_id = ?'); vals.push(equipe_id); }
+  if (lote) { where.push('p.lote_pedido = ?'); vals.push(lote); }
 
-  // segurança: usuário equipe só pode listar os próprios pedidos
-  if (req.user && req.user.perfil === 'solicitante' && req.user.equipe_id) {
-    where.push('p.equipe_id = ?');
-    vals.push(req.user.equipe_id);
+  // segurança: usuário solicitante só pode listar pedidos das suas equipes
+  if (req.user && req.user.perfil === 'solicitante') {
+    const [equipesUsuario] = await pool.execute(
+      'SELECT equipe_id FROM usuarios_equipes WHERE usuario_id = ?',
+      [req.user.id]
+    );
+    
+    if (equipesUsuario.length > 0) {
+      const equipesIds = equipesUsuario.map(e => e.equipe_id);
+      where.push(`p.equipe_id IN (${equipesIds.map(() => '?').join(',')})`);
+      vals.push(...equipesIds);
+    } else {
+      // Usuário sem equipes não vê nenhum pedido
+      where.push('1 = 0');
+    }
   }
   
   // segurança: gestor só pode listar pedidos das suas equipes
@@ -310,9 +397,10 @@ router.get('/:id', requireRole('admin', 'gestor', 'solicitante'), async (req, re
     
     // Buscar pedido
     const [[pedido]] = await pool.execute(
-      `SELECT p.*, e.nome AS equipe_nome 
+      `SELECT p.*, e.nome AS equipe_nome, u.nome AS usuario_nome, u.email AS usuario_email 
        FROM pedidos p 
        JOIN equipes e ON e.id = p.equipe_id 
+       LEFT JOIN usuarios u ON u.id = p.criado_por
        WHERE p.id = ?`,
       [id]
     );
@@ -565,11 +653,8 @@ router.put('/:id/rejeitar', requireRole('admin', 'gestor'), async (req, res) => 
       return res.status(400).json({ error: 'Pedido não está pendente de aprovação' });
     }
     
-    // Devolver o saldo para a equipe (já foi debitado na criação)
-    await conn.execute(
-      'UPDATE equipes SET saldo_atual = saldo_atual + ?, limite_disponivel = limite_disponivel + ? WHERE id = ?',
-      [pedido.valor_total, pedido.valor_total, pedido.equipe_id]
-    );
+    // NÃO devolver saldo - o saldo nunca foi debitado pois o pedido estava PENDENTE
+    // O débito só acontece quando o gestor APROVA o pedido
     
     // Atualizar status do pedido
     await conn.execute(

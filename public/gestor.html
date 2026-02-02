@@ -58,6 +58,8 @@
 
     /* Estilos para seleção de equipes */
     .equipes-checkboxes {
+      display: block !important;
+      min-height: 100px;
       max-height: 200px;
       overflow-y: auto;
       border: 1px solid var(--gray-300);
@@ -172,7 +174,7 @@
     }
 
     .equipes-badge.all {
-      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
       box-shadow: 0 2px 4px rgba(139,92,246,0.2);
     }
 
@@ -416,7 +418,7 @@
     }
 
     .user-equipes-badge.all {
-      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
       box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
     }
 
@@ -511,6 +513,7 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 1.5rem;
+      border-radius: 12px;
     }
 
     .card-title {
@@ -824,7 +827,7 @@
     }
 
     .dashboard-card-primary .dashboard-card-icon {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
     }
 
     .dashboard-card-success .dashboard-card-icon {
@@ -972,6 +975,7 @@
     .modern-card .card-header {
       padding: 1.5rem;
       border-bottom: none;
+      border-radius: 12px;
     }
 
     .modern-card .card-header h3 {
@@ -980,6 +984,11 @@
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      color: white;
+    }
+
+    .modern-card .card-header {
+      color: white;
     }
 
     .modern-form-grid {
@@ -1111,7 +1120,7 @@
 
 
     .modern-table thead {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
     }
 
     .modern-table thead th {
@@ -1250,7 +1259,7 @@
       width: 18px;
       height: 18px;
       cursor: pointer;
-      accent-color: #667eea;
+      accent-color: #0066cc;
     }
 
     .equipe-filtro-item label {
@@ -1277,12 +1286,12 @@
     }
 
     .usuario-card:hover {
-      border-color: #667eea;
+      border-color: #0066cc;
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
     }
 
     .usuario-card.expandido {
-      border-color: #667eea;
+      border-color: #0066cc;
       box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
     }
 
@@ -1302,7 +1311,7 @@
     }
 
     .usuario-card.expandido .usuario-card-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
       color: white;
     }
 
@@ -1446,7 +1455,7 @@
     }
 
     .usuario-form-label i {
-      color: #667eea;
+      color: #0066cc;
     }
 
     .usuario-form-input {
@@ -1460,7 +1469,7 @@
 
     .usuario-form-input:focus {
       outline: none;
-      border-color: #667eea;
+      border-color: #0066cc;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
@@ -1485,7 +1494,7 @@
     }
 
     .usuario-equipe-tag {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
       color: white;
       padding: 0.4rem 0.8rem;
       border-radius: 16px;
@@ -1861,7 +1870,7 @@
     }
 
     .modal-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
       color: white;
       padding: 1.5rem;
       border-radius: 16px 16px 0 0;
@@ -1934,7 +1943,7 @@
     }
 
     .saldo-card:hover {
-      border-color: #667eea;
+      border-color: #0066cc;
       transform: translateY(-3px);
     }
 
@@ -2004,7 +2013,7 @@
       padding: 1.25rem;
       background: #f9fafb;
       border-radius: 12px;
-      border-left: 4px solid #667eea;
+      border-left: 4px solid #0066cc;
     }
 
     .saldo-detalhes p {
@@ -2194,6 +2203,312 @@
       flex: 1;
       min-width: 140px;
     }
+    
+    /* Estilos para cards agrupados (lotes) */
+    .pedido-card-grupo {
+      background: white;
+      border: 3px solid #3b82f6;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+      transition: all 0.3s ease;
+    }
+    
+    .pedido-card-grupo:hover {
+      box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+      transform: translateY(-2px);
+    }
+    
+    .pedido-card-grupo.pendente {
+      border-color: #fbbf24;
+      background: linear-gradient(to right, #fffbeb 0%, #ffffff 100%);
+    }
+    
+    .pedido-card-header-grupo {
+      padding: 1.25rem;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .pedido-card-grupo.pendente .pedido-card-header-grupo {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    }
+    
+    .pedido-lote-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: white;
+    }
+    
+    .lote-badge {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: white;
+    }
+    
+    .pedido-card-header-grupo .pedido-data {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.95rem;
+      color: white;
+      font-weight: 600;
+    }
+    
+    .pedido-valor-total {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: white;
+    }
+    
+    .pedidos-agrupados-lista {
+      padding: 1rem;
+      background: #f9fafb;
+      max-height: 200px;
+      overflow-y: auto;
+      transition: max-height 0.3s ease;
+    }
+    
+    .pedido-mini {
+      display: grid;
+      grid-template-columns: 80px 1fr auto auto;
+      gap: 1rem;
+      align-items: center;
+      padding: 0.75rem;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      transition: all 0.2s;
+    }
+    
+    .pedido-mini:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+    }
+    
+    .pedido-mini:last-child {
+      margin-bottom: 0;
+    }
+    
+    .pedido-mini-id {
+      font-weight: 700;
+      color: #6b7280;
+      font-size: 0.95rem;
+    }
+    
+    .pedido-mini-equipe {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 0.95rem;
+    }
+    
+    .pedido-mini-valor {
+      font-weight: 700;
+      color: #10b981;
+      font-size: 1rem;
+      text-align: right;
+    }
+    
+    .pedido-mini-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    
+    .btn-mini {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 0.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      height: 36px;
+    }
+    
+    .btn-mini:hover {
+      background: #2563eb;
+      transform: scale(1.05);
+    }
+    
+    .btn-mini.btn-success {
+      background: #22c55e;
+    }
+    
+    .btn-mini.btn-success:hover {
+      background: #16a34a;
+    }
+    
+    .btn-mini.btn-danger {
+      background: #ef4444;
+    }
+    
+    .btn-mini.btn-danger:hover {
+      background: #dc2626;
+    }
+    
+    /* Animações de aprovação/rejeição */
+    .pedido-animation-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 10;
+    }
+    
+    .pedido-animation-overlay.show {
+      opacity: 1;
+    }
+    
+    .animation-check,
+    .animation-x {
+      font-size: 3rem;
+      animation: scaleIn 0.5s ease;
+    }
+    
+    .animation-check {
+      color: #22c55e;
+    }
+    
+    .animation-x {
+      color: #ef4444;
+    }
+    
+    @keyframes scaleIn {
+      0% {
+        transform: scale(0) rotate(-180deg);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.2) rotate(0deg);
+      }
+      100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+    
+    .pedido-actions-grupo {
+      padding: 1rem;
+      background: white;
+      border-top: 2px solid #e5e7eb;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    
+    .pedido-actions-grupo .btn {
+      flex: 1;
+      min-width: 160px;
+    }
+    
+    /* Animação de sucesso centralizada */
+    .success-animation-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .success-animation-overlay.show {
+      opacity: 1;
+    }
+    
+    .success-animation-modal {
+      background: white;
+      border-radius: 20px;
+      padding: 3rem 2.5rem;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: scale(0.8);
+      transition: transform 0.3s ease;
+    }
+    
+    .success-animation-overlay.show .success-animation-modal {
+      transform: scale(1);
+    }
+    
+    .success-check-icon {
+      font-size: 5rem;
+      color: #22c55e;
+      margin-bottom: 1.5rem;
+      animation: checkBounce 0.6s ease;
+    }
+    
+    @keyframes checkBounce {
+      0% {
+        transform: scale(0) rotate(-180deg);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.2) rotate(10deg);
+      }
+      100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+    
+    .success-title {
+      font-size: 2rem;
+      color: #1f2937;
+      margin: 0 0 1rem 0;
+      font-weight: 700;
+    }
+    
+    .success-subtitle {
+      font-size: 1.1rem;
+      color: #6b7280;
+      margin: 0 0 1.5rem 0;
+      font-weight: 600;
+    }
+    
+    .success-content {
+      margin-top: 1rem;
+    }
+    
+    .success-info {
+      font-size: 0.95rem;
+      color: #6b7280;
+      line-height: 1.6;
+      margin: 1rem 0 0 0;
+      padding: 1rem;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
 
     @media (max-width: 768px) {
       .pedido-card-header {
@@ -2240,8 +2555,7 @@
   <header class="header">
     <div class="header-content">
       <div class="logo">
-        <img src="/images/Group 23.svg" alt="BRAGO Distribuidora" style="height: 35px; margin-right: 10px;">
-        Dashboard Gestor
+        <img src="/images/Group 23.svg" alt="BRAGO Distribuidora" style="height: 35px;">
       </div>
       
       <nav class="nav-tabs">
@@ -2249,30 +2563,30 @@
           <i class="fas fa-chart-line"></i>
           Dashboard
         </button>
+        <button class="nav-tab" data-tab="pedidos" style="position: relative;">
+          <i class="fas fa-shopping-cart"></i>
+          Pedidos
+          <span id="badgePedidosPendentes" style="display: none; position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border-radius: 12px; padding: 2px 8px; font-size: 0.75rem; font-weight: 600;">0</span>
+        </button>
         <button class="nav-tab" data-tab="equipes">
           <i class="fas fa-users"></i>
           Equipes
         </button>
-        <button class="nav-tab" data-tab="produtos" id="tab-btn-produtos">
-          <i class="fas fa-boxes"></i>
+        <button class="nav-tab" data-tab="produtos" id="produtosTab">
+          <i class="fas fa-box"></i>
           Produtos
+        </button>
+        <button class="nav-tab" data-tab="usuarios" id="usuariosTab">
+          <i class="fas fa-user-cog"></i>
+          Usuários
         </button>
         <a href="/galeria.html" class="nav-tab" style="text-decoration: none;">
           <i class="fas fa-images"></i>
           Ver Galeria
         </a>
-        <button class="nav-tab" data-tab="pedidos">
-          <i class="fas fa-shopping-cart"></i>
-          Pedidos
-        </button>
-        <button class="nav-tab" data-tab="usuarios" id="tab-btn-usuarios">
-          <i class="fas fa-user-cog"></i>
-          Usuários
-        </button>
       </nav>
       
       <div class="user-info">
-        <span id="userGreeting">Carregando...</span>
         <span id="userEquipesBadge" style="display: none;"></span>
         <button class="logout-btn" onclick="logout()">
           <i class="fas fa-sign-out-alt"></i>
@@ -2285,6 +2599,14 @@
   <main class="main-content">
     <!-- Tab Dashboard -->
     <div class="tab-content active" id="tab-dashboard">
+      <!-- Título e Boas-vindas -->
+      <div style="margin-bottom: 2rem;">
+        <h1 style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0 0 0.5rem 0;">Dashboard Gestor</h1>
+        <p style="color: #6b7280; font-size: 1rem; margin: 0;" id="welcomeMessageContainer">
+          <span id="saudacaoHorario">Olá</span>, <span id="userGreetingDashboard" style="font-weight: 600; color: #3b82f6;">Carregando...</span>! Aqui está um resumo das solicitações.
+        </p>
+      </div>
+      
       <!-- Cards de Resumo -->
       <div class="dashboard-grid">
         <div class="dashboard-card dashboard-card-primary">
@@ -2394,12 +2716,12 @@
       </div>
 
       <div class="card modern-card">
-        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+        <div class="card-header" style="background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%); color: white; border: none;">
           <h3 class="card-title">
             <i class="fas fa-users"></i>
             Equipes Cadastradas
           </h3>
-          <button class="btn btn-secondary" onclick="carregarEquipes()" style="background: white; color: #667eea;">
+          <button class="btn btn-secondary" onclick="carregarEquipes()" style="background: white; color: #0066cc;">
             <i class="fas fa-sync-alt"></i>
             Recarregar
           </button>
@@ -2506,14 +2828,37 @@
                 Se "Sim", apenas equipes com contrato terão acesso
               </small>
             </div>
+            <div class="form-group">
+              <label class="form-label">Disponibilidade do Produto *</label>
+              <select class="form-input" id="acesso_especifico" required onchange="toggleAcessoEspecifico()">
+                <option value="0">Todas as Equipes</option>
+                <option value="1">Equipes Específicas</option>
+              </select>
+              <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                Defina se o produto estará disponível para todos ou apenas equipes selecionadas
+              </small>
+            </div>
           </div>
           
-          <!-- Seleção de Equipes (aparece apenas quando cont_oba = 'S') -->
+          <!-- Seleção de Equipes para Acesso Específico -->
+          <div id="equipesEspecificasContainer" class="form-group" style="display: none; border: 2px solid #e5e7eb; padding: 1rem; border-radius: 8px; background: #f9fafb;">
+            <label class="form-label" style="margin-bottom: 0.75rem; display: block;">
+              <i class="fas fa-users-cog"></i> Equipes com Acesso ao Produto
+            </label>
+            <div id="equipesEspecificasCheckboxes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.5rem; max-height: 300px; overflow-y: auto; padding: 0.5rem;">
+              <!-- Preenchido dinamicamente via JavaScript -->
+            </div>
+            <small style="color: #dc2626; font-size: 0.75rem; margin-top: 0.5rem; display: block;">
+              <i class="fas fa-exclamation-triangle"></i> Apenas as equipes marcadas poderão visualizar este produto
+            </small>
+          </div>
+          
+          <!-- Seleção de Equipes para Contrato OBA (aparece apenas quando cont_oba = 'S') -->
           <div id="equipesSelectorContainer" class="form-group" style="display: none; border: 2px solid #e5e7eb; padding: 1rem; border-radius: 8px; background: #f9fafb;">
             <label class="form-label" style="margin-bottom: 0.75rem; display: block;">
-              <i class="fas fa-users"></i> Selecione as Equipes com Acesso
+              <i class="fas fa-users"></i> Equipes com Contrato OBA
             </label>
-            <div id="equipesCheckboxes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.5rem;">
+            <div id="produtosEquipesCheckboxes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.5rem;">
               <!-- Preenchido dinamicamente via JavaScript -->
             </div>
             <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.5rem; display: block;">
@@ -2521,9 +2866,38 @@
             </small>
           </div>
           
-          <div class="form-group">
-            <label class="form-label">URL da Foto</label>
-            <input type="url" class="form-input" id="foto" placeholder="https://exemplo.com/foto.jpg">
+          <div class="form-group" style="border: 2px solid #e5e7eb; padding: 1rem; border-radius: 8px; background: #f9fafb;">
+            <label class="form-label" style="margin-bottom: 0.75rem; display: block;">
+              <i class="fas fa-image"></i> Foto do Produto
+            </label>
+            
+            <!-- Preview da imagem -->
+            <div id="fotoPreview" style="margin-bottom: 1rem; display: none;">
+              <img id="fotoPreviewImg" src="" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e5e7eb;">
+              <button type="button" class="btn btn-sm btn-secondary" onclick="removerFoto()" style="margin-left: 1rem;">
+                <i class="fas fa-trash"></i> Remover
+              </button>
+            </div>
+            
+            <!-- Upload de arquivo -->
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">Enviar Foto</label>
+              <input type="file" class="form-input" id="fotoUpload" accept="image/*" onchange="previewFoto(event)">
+              <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                Formatos aceitos: JPG, PNG, WebP (máx. 5MB)
+              </small>
+            </div>
+            
+            <!-- OU URL -->
+            <div style="text-align: center; margin: 1rem 0; color: #9ca3af; font-weight: 600;">- OU -</div>
+            
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">URL da Foto</label>
+              <input type="url" class="form-input" id="foto" placeholder="https://exemplo.com/foto.jpg" onchange="previewFotoUrl(event)">
+              <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                Ou cole o link de uma imagem online
+              </small>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label">Observações</label>
@@ -2642,13 +3016,15 @@
 
       <!-- Filtro de Equipes (apenas para gestores) -->
       <div class="card" id="filtroEquipesPedidos" style="display: none;">
-        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
-          <h3 class="card-title">
-            <i class="fas fa-store"></i>
-            Filtrar por Equipe
-          </h3>
-          <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.25rem;">
-            <span id="equipesFiltradasCount">0 equipes selecionadas</span>
+        <div class="card-header" style="background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%); color: white; border: none; padding: 1.5rem; border-radius: 12px; margin-bottom: 0;">
+          <div>
+            <h3 class="card-title" style="color: white; margin: 0;">
+              <i class="fas fa-store"></i>
+              Filtrar por Equipe
+            </h3>
+            <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.25rem; color: white;">
+              <span id="equipesFiltradasCount">0 equipes selecionadas</span>
+            </div>
           </div>
         </div>
         <div style="padding: 1.5rem;">
@@ -2669,7 +3045,7 @@
       </div>
 
       <div class="card modern-card">
-        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+        <div class="card-header" style="background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%); color: white; border: none;">
           <h3 class="card-title">
             <i class="fas fa-shopping-cart"></i>
             Pedidos
@@ -2705,7 +3081,7 @@
     <!-- Tab Usuários -->
     <div class="tab-content" id="tab-usuarios">
       <div class="card modern-card">
-        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+        <div class="card-header" style="background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%); color: white; border: none;">
           <h3 class="card-title">
             <i class="fas fa-user-plus"></i>
             Adicionar Novo Usuário
@@ -2734,11 +3110,19 @@
                 <option value="vendedor">Vendedor</option>
               </select>
             </div>
-            <div class="form-group modern-form-group" id="grupoEquipe">
+            <div class="form-group modern-form-group" id="grupoEquipe" style="display: block;">
               <label class="form-label"><i class="fas fa-users"></i> Equipes <span id="equipeObrigatorio" style="display:none; color: #ef4444;">*</span></label>
-              <div class="equipes-selector">
-                <div id="equipesCheckboxes" class="equipes-checkboxes">
-                  <!-- Checkboxes serão carregados via JS -->
+              <div class="equipes-selector" style="display: block;">
+                <div style="margin-bottom: 0.75rem; padding: 0.5rem; background: #f3f4f6; border-radius: 6px; border: 1px solid #d1d5db;">
+                  <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 600; color: #374151;">
+                    <input type="checkbox" id="selecionarTodasEquipes" onchange="window.toggleTodasEquipes(this.checked)" style="cursor: pointer; width: 18px; height: 18px;">
+                    <span><i class="fas fa-check-double"></i> Selecionar Todas as Equipes</span>
+                  </label>
+                </div>
+                <div id="usuariosEquipesCheckboxes" class="equipes-checkboxes" style="display: block;">
+                  <p style="color: #9ca3af; text-align: center; padding: 1rem;">
+                    <i class="fas fa-spinner fa-spin"></i> Carregando equipes...
+                  </p>
                 </div>
                 <div id="equipesSelecionadas" class="equipes-tags" style="margin-top: 0.75rem;">
                   <!-- Tags das equipes selecionadas -->
@@ -2783,7 +3167,7 @@
       </div>
 
       <div class="card modern-card">
-        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+        <div class="card-header" style="background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%); color: white; border: none;">
           <h3 class="card-title">
             <i class="fas fa-users-cog"></i>
             Gerenciar Usuários
@@ -2847,7 +3231,7 @@
       </div>
 
       <!-- Seção de Teste - Adicionar Vendedor Rápido -->
-      <div class="card modern-card" style="border: 2px dashed #667eea;">
+      <div class="card modern-card" style="border: 2px dashed #0066cc;">
         <div class="card-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none;">
           <h3 class="card-title">
             <i class="fas fa-flask"></i>
@@ -2970,12 +3354,35 @@
                 Se "Sim", apenas equipes com contrato terão acesso
               </small>
             </div>
+            <div class="form-group">
+              <label class="form-label">Disponibilidade do Produto *</label>
+              <select class="form-input" id="editAcessoEspecifico" required onchange="toggleAcessoEspecificoEdit()">
+                <option value="0">Todas as Equipes</option>
+                <option value="1">Equipes Específicas</option>
+              </select>
+              <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                Defina se o produto estará disponível para todos ou apenas equipes selecionadas
+              </small>
+            </div>
           </div>
           
-          <!-- Seleção de Equipes no Modal Edição -->
+          <!-- Seleção de Equipes para Acesso Específico (Edição) -->
+          <div id="editEquipesEspecificasContainer" class="form-group" style="display: none; border: 2px solid #e5e7eb; padding: 1rem; border-radius: 8px; background: #f9fafb;">
+            <label class="form-label" style="margin-bottom: 0.75rem; display: block;">
+              <i class="fas fa-users-cog"></i> Equipes com Acesso ao Produto
+            </label>
+            <div id="editEquipesEspecificasCheckboxes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.5rem; max-height: 300px; overflow-y: auto; padding: 0.5rem;">
+              <!-- Preenchido dinamicamente via JavaScript -->
+            </div>
+            <small style="color: #dc2626; font-size: 0.75rem; margin-top: 0.5rem; display: block;">
+              <i class="fas fa-exclamation-triangle"></i> Apenas as equipes marcadas poderão visualizar este produto
+            </small>
+          </div>
+          
+          <!-- Seleção de Equipes para Contrato OBA (Edição) -->
           <div id="editEquipesSelectorContainer" class="form-group" style="display: none; border: 2px solid #e5e7eb; padding: 1rem; border-radius: 8px; background: #f9fafb;">
             <label class="form-label" style="margin-bottom: 0.75rem; display: block;">
-              <i class="fas fa-users"></i> Selecione as Equipes com Acesso
+              <i class="fas fa-users"></i> Equipes com Contrato OBA
             </label>
             <div id="editEquipesCheckboxes" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 0.5rem;">
               <!-- Preenchido dinamicamente via JavaScript -->
@@ -2985,9 +3392,38 @@
             </small>
           </div>
           
-          <div class="form-group">
-            <label class="form-label">URL da Foto</label>
-            <input type="url" class="form-input" id="editFoto">
+          <div class="form-group" style="border: 2px solid #e5e7eb; padding: 1rem; border-radius: 8px; background: #f9fafb;">
+            <label class="form-label" style="margin-bottom: 0.75rem; display: block;">
+              <i class="fas fa-image"></i> Foto do Produto
+            </label>
+            
+            <!-- Preview da imagem atual -->
+            <div id="editFotoPreview" style="margin-bottom: 1rem; display: none;">
+              <img id="editFotoPreviewImg" src="" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #e5e7eb;">
+              <button type="button" class="btn btn-sm btn-secondary" onclick="removerFotoEdit()" style="margin-left: 1rem;">
+                <i class="fas fa-trash"></i> Remover
+              </button>
+            </div>
+            
+            <!-- Upload de novo arquivo -->
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">Alterar Foto (Upload)</label>
+              <input type="file" class="form-input" id="editFotoUpload" accept="image/*" onchange="previewFotoEdit(event)">
+              <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                Formatos aceitos: JPG, PNG, WebP (máx. 5MB)
+              </small>
+            </div>
+            
+            <!-- OU URL -->
+            <div style="text-align: center; margin: 1rem 0; color: #9ca3af; font-weight: 600;">- OU -</div>
+            
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label">URL da Foto</label>
+              <input type="url" class="form-input" id="editFoto" placeholder="https://exemplo.com/foto.jpg" onchange="previewFotoUrlEdit(event)">
+              <small style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                Ou cole o link de uma imagem online
+              </small>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label">Observações</label>
@@ -3296,8 +3732,8 @@
     })();
   </script>
   
-  <script src="js/gestor-equipes-produtos.js"></script>
-  <script src="js/gestor.js?v=20251203h"></script>
+  <script src="js/gestor-equipes-produtos.js?v=20260107d"></script>
+  <script src="js/gestor.js?v=20260107d"></script>
   <script src="js/emails.js?v=20251204a"></script>
   <script src="js/emails.js?v=20251204a"></script>
   <script>
@@ -3308,11 +3744,22 @@
       
       const novoPerfil = document.getElementById('novoPerfil');
       const grupoCategoria = document.getElementById('grupoCategoriaAcesso');
+      const equipesCheckboxes = document.getElementById('usuariosEquipesCheckboxes');
+      
       console.log('📦 Elementos no timeout:', {
         novoPerfil: !!novoPerfil,
         grupoCategoria: !!grupoCategoria,
-        grupoCategoriaStyle: grupoCategoria ? grupoCategoria.style.display : 'N/A'
+        grupoCategoriaStyle: grupoCategoria ? grupoCategoria.style.display : 'N/A',
+        equipesCheckboxes: !!equipesCheckboxes,
+        equipesCheckboxesContent: equipesCheckboxes ? equipesCheckboxes.innerHTML : 'N/A'
       });
+      
+      // Verificar conteúdo do container de equipes
+      if (equipesCheckboxes) {
+        console.log('📋 Conteúdo do container de equipes:', equipesCheckboxes.innerHTML);
+        console.log('📏 Altura do container:', equipesCheckboxes.offsetHeight, 'px');
+        console.log('👁️ Visível?', equipesCheckboxes.offsetParent !== null);
+      }
       
       // Teste manual
       if (window.handlePerfilChange) {
@@ -3320,6 +3767,20 @@
         window.handlePerfilChange('solicitante');
       }
     }, 1000);
+    
+    // Debug adicional para equipes após 3 segundos
+    setTimeout(function() {
+      console.log('\n=== 🔍 DEBUG EQUIPES (3s) ===');
+      const equipesCheckboxes = document.getElementById('usuariosEquipesCheckboxes');
+      if (equipesCheckboxes) {
+        const checkboxes = equipesCheckboxes.querySelectorAll('input[type="checkbox"]');
+        console.log('✅ Total de checkboxes encontrados:', checkboxes.length);
+        console.log('📄 HTML do container:', equipesCheckboxes.innerHTML.substring(0, 200));
+      } else {
+        console.error('❌ Container #usuariosEquipesCheckboxes NÃO encontrado!');
+      }
+      console.log('============================\n');
+    }, 3000);
   </script>
 
   <!-- Modal de Seleção de Equipes -->

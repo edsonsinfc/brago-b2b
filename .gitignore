@@ -32,3 +32,19 @@ Thumbs.db
 # Temporary
 tmp/
 temp/
+
+# Project specific
+backups/*.sql
+public/uploads/produtos/*
+!public/uploads/produtos/.gitkeep
+arquivos_problematicos/
+fix-all-encoding.ps1
+fix-encoding.ps1
+usuarios_*.csv
+*.bat
+reiniciar_servidor.bat
+restart-server.ps1
+INDICADORES_EQUIPES.txt
+LOGOUT_AUTOMATICO.txt
+README-DEPLOY.txt
+test_foto_query.js

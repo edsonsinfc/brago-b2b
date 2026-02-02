@@ -104,7 +104,7 @@ class ProdutoSyncService {
       const [produtos] = await pool.execute(`
         SELECT 
           id, codprod, descricao, unidade, multiplos, 
-          estoque, preco, ncm, categoria, foto, observacoes,
+          estoque, preco, ncm, categoria, foto, foto_path, observacoes,
           categoria_facility, categoria_manipulacao, ativo,
           created_at, updated_at
         FROM produtos 
@@ -159,30 +159,111 @@ class ProdutoSyncService {
   
   async atualizarProduto(id, dados) {
     try {
+      console.log('🔧 Service atualizarProduto - ID:', id);
+      console.log('🔧 Dados recebidos:', JSON.stringify(dados, null, 2));
+      
       const { 
         codprod, descricao, unidade, multiplos, 
-        estoque, preco, ncm, categoria, foto, observacoes,
-        categoria_facility, categoria_manipulacao
+        estoque, preco, ncm, categoria, foto, foto_path, observacoes,
+        categoria_facility, categoria_manipulacao, cont_oba, acesso_especifico,
+        equipes_contratos, equipes_especificas
       } = dados;
       
-      await pool.execute(`
-        UPDATE produtos 
-        SET codprod = ?, descricao = ?, unidade = ?, multiplos = ?, 
-            estoque = ?, preco = ?, ncm = ?, categoria = ?, 
-            foto = ?, observacoes = ?,
-            categoria_facility = ?, categoria_manipulacao = ?,
-            updated_at = NOW()
-        WHERE id = ?
-      `, [
-        codprod, descricao, unidade, multiplos, estoque, preco, ncm, categoria, 
-        foto, observacoes, 
-        categoria_facility ? 1 : 0, categoria_manipulacao ? 1 : 0,
-        id
-      ]);
+      // Montar query dinamicamente dependendo se há foto nova
+      let query;
+      let params;
+      
+      if (foto_path) {
+        // Se há upload de nova foto, atualizar foto_path
+        query = `
+          UPDATE produtos 
+          SET codprod = ?, descricao = ?, unidade = ?, multiplos = ?, 
+              estoque = ?, preco = ?, ncm = ?, categoria = ?, 
+              foto = ?, foto_path = ?, observacoes = ?,
+              categoria_facility = ?, categoria_manipulacao = ?,
+              cont_oba = ?, acesso_especifico = ?,
+              updated_at = NOW()
+          WHERE id = ?
+        `;
+        params = [
+          codprod, descricao, unidade, multiplos, estoque, preco, ncm, categoria, 
+          foto, foto_path, observacoes, 
+          categoria_facility ? 1 : 0, categoria_manipulacao ? 1 : 0,
+          cont_oba || 'N', acesso_especifico || 0,
+          id
+        ];
+      } else if (foto) {
+        // Se há URL de foto, atualizar apenas foto (não foto_path)
+        query = `
+          UPDATE produtos 
+          SET codprod = ?, descricao = ?, unidade = ?, multiplos = ?, 
+              estoque = ?, preco = ?, ncm = ?, categoria = ?, 
+              foto = ?, observacoes = ?,
+              categoria_facility = ?, categoria_manipulacao = ?,
+              cont_oba = ?, acesso_especifico = ?,
+              updated_at = NOW()
+          WHERE id = ?
+        `;
+        params = [
+          codprod, descricao, unidade, multiplos, estoque, preco, ncm, categoria, 
+          foto, observacoes, 
+          categoria_facility ? 1 : 0, categoria_manipulacao ? 1 : 0,
+          cont_oba || 'N', acesso_especifico || 0,
+          id
+        ];
+      } else {
+        // Se não há foto nova, não atualizar campos de foto
+        query = `
+          UPDATE produtos 
+          SET codprod = ?, descricao = ?, unidade = ?, multiplos = ?, 
+              estoque = ?, preco = ?, ncm = ?, categoria = ?, 
+              observacoes = ?,
+              categoria_facility = ?, categoria_manipulacao = ?,
+              cont_oba = ?, acesso_especifico = ?,
+              updated_at = NOW()
+          WHERE id = ?
+        `;
+        params = [
+          codprod, descricao, unidade, multiplos, estoque, preco, ncm, categoria, 
+          observacoes, 
+          categoria_facility ? 1 : 0, categoria_manipulacao ? 1 : 0,
+          cont_oba || 'N', acesso_especifico || 0,
+          id
+        ];
+      }
+      
+      console.log('📝 Executando query:', query);
+      console.log('📝 Params:', params);
+      
+      await pool.execute(query, params);
+      
+      console.log('✅ Produto atualizado com sucesso!');
+      
+      // Atualizar equipes com acesso específico
+      if (acesso_especifico === 1) {
+        // Remover todas as equipes específicas antigas
+        await pool.execute('DELETE FROM produtos_equipes_especificas WHERE produto_id = ?', [id]);
+        
+        // Inserir novas equipes específicas
+        if (equipes_especificas && equipes_especificas.length > 0) {
+          for (const equipeId of equipes_especificas) {
+            await pool.execute(`
+              INSERT IGNORE INTO produtos_equipes_especificas (produto_id, equipe_id)
+              VALUES (?, ?)
+            `, [id, equipeId]);
+          }
+        }
+      } else {
+        // Se acesso_especifico = 0, remover todas as equipes específicas
+        await pool.execute('DELETE FROM produtos_equipes_especificas WHERE produto_id = ?', [id]);
+      }
       
       return { success: true };
     } catch (error) {
       console.error('❌ Erro ao atualizar produto:', error);
+      console.error('❌ SQL Error Code:', error.code);
+      console.error('❌ SQL Message:', error.sqlMessage);
+      console.error('❌ SQL State:', error.sqlState);
       throw error;
     }
   }
@@ -193,28 +274,42 @@ class ProdutoSyncService {
       
       const { 
         codprod, descricao, unidade = 'UN', multiplos = 1, 
-        estoque = 0, preco = 0, ncm, categoria, foto, observacoes,
-        categoria_facility, categoria_manipulacao
+        estoque = 0, preco = 0, ncm, categoria, foto, foto_path, observacoes,
+        categoria_facility, categoria_manipulacao, cont_oba, acesso_especifico,
+        equipes_contratos, equipes_especificas
       } = dados;
       
       console.log('🔧 Dados processados:', {
         codprod, descricao, unidade, multiplos, 
-        estoque, preco, ncm, categoria, foto, observacoes,
-        categoria_facility, categoria_manipulacao
+        estoque, preco, ncm, categoria, foto, foto_path, observacoes,
+        categoria_facility, categoria_manipulacao, cont_oba, acesso_especifico
       });
       
       const [result] = await pool.execute(`
         INSERT INTO produtos 
-        (codprod, descricao, unidade, multiplos, estoque, preco, ncm, categoria, foto, observacoes, categoria_facility, categoria_manipulacao)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (codprod, descricao, unidade, multiplos, estoque, preco, ncm, categoria, foto, foto_path, observacoes, categoria_facility, categoria_manipulacao, cont_oba, acesso_especifico)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
-        codprod, descricao, unidade, multiplos, estoque, preco, ncm, categoria, foto, observacoes,
-        categoria_facility ? 1 : 0, categoria_manipulacao ? 1 : 0
+        codprod, descricao, unidade, multiplos, estoque, preco, ncm, categoria, 
+        foto || null, foto_path || null, observacoes,
+        categoria_facility ? 1 : 0, categoria_manipulacao ? 1 : 0, cont_oba || 'N', acesso_especifico || 0
       ]);
       
-      console.log('✅ Produto inserido no banco com ID:', result.insertId);
+      const produtoId = result.insertId;
+      console.log('✅ Produto inserido no banco com ID:', produtoId);
       
-      return { success: true, id: result.insertId };
+      // Se tiver acesso_especifico = 1, salvar na tabela produtos_equipes_especificas
+      if (acesso_especifico === 1 && equipes_especificas && equipes_especificas.length > 0) {
+        console.log('📝 Salvando equipes com acesso específico:', equipes_especificas);
+        for (const equipeId of equipes_especificas) {
+          await pool.execute(`
+            INSERT IGNORE INTO produtos_equipes_especificas (produto_id, equipe_id)
+            VALUES (?, ?)
+          `, [produtoId, equipeId]);
+        }
+      }
+      
+      return { success: true, id: produtoId };
     } catch (error) {
       console.error('❌ Erro detalhado no service criarProduto:', {
         message: error.message,

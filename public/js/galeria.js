@@ -116,10 +116,8 @@
       const card = document.createElement('div');
       card.className = 'product-card';
       
-      // Usar placeholder se não houver imagem
-      const imagemUrl = produto.foto && produto.foto.trim() !== '' 
-        ? produto.foto 
-        : '';
+      // Usar foto_path (upload) ou foto (URL), ou placeholder se não houver
+      const imagemUrl = produto.foto_path || produto.foto || '';
       
       card.innerHTML = `
         <div class="product-image-container">

@@ -1,30 +1,191 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const { getProdutosOracle } = require('../repositories/oracleProdutos');
 const produtoSyncService = require('../services/produtoSyncService');
 const { authenticate, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Configurar multer para upload de imagens
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '../../public/uploads/produtos');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'produto-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Apenas imagens são permitidas (JPEG, PNG, GIF, WebP)'));
+    }
+  }
+});
+
 router.use(authenticate);
 
-// Rota específica para galeria - mostra TODOS os produtos ativos (sem filtro de equipe)
+// Rota para upload de foto de produto
+router.post('/upload-foto', requireAdmin, (req, res) => {
+  upload.single('foto')(req, res, (err) => {
+    try {
+      if (err) {
+        console.error('❌ Erro do multer:', err);
+        if (err instanceof multer.MulterError) {
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ error: 'Arquivo muito grande. Máximo 5MB.' });
+          }
+          return res.status(400).json({ error: `Erro no upload: ${err.message}` });
+        }
+        return res.status(400).json({ error: err.message || 'Erro ao processar upload' });
+      }
+      
+      if (!req.file) {
+        console.log('⚠️ Nenhum arquivo enviado');
+        return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+      }
+      
+      const fotoPath = `/uploads/produtos/${req.file.filename}`;
+      console.log('✅ Foto do produto uploaded:', fotoPath);
+      
+      res.json({ 
+        success: true, 
+        fotoPath: fotoPath,
+        message: 'Foto enviada com sucesso!'
+      });
+    } catch (error) {
+      console.error('❌ Erro inesperado ao fazer upload:', error);
+      res.status(500).json({ error: 'Erro interno ao enviar foto' });
+    }
+  });
+});
+
+// Rota específica para galeria - filtra produtos por equipe do usuário
 router.get('/galeria', async (req, res) => {
   try {
     const { search, categoria, page = 1, pageSize = 1000 } = req.query;
+    const pool = require('../config/db.mysql');
     
-    console.log('🎨 Buscando produtos para galeria (todos os produtos ativos)...');
+    console.log('🎨 Buscando produtos para galeria...');
+    console.log('   Usuário:', req.user.id, '| Perfil:', req.user.perfil);
     
-    const result = await produtoSyncService.buscarProdutos({
-      search,
-      categoria,
-      page: parseInt(page),
-      pageSize: parseInt(pageSize),
-      ativo: true
+    // ADMIN vê TODOS os produtos
+    if (req.user.perfil === 'admin') {
+      console.log('   👑 Admin - retornando todos os produtos');
+      
+      let whereClause = 'WHERE p.ativo = 1';
+      let params = [];
+      
+      if (search) {
+        whereClause += ' AND (p.codprod LIKE ? OR p.descricao LIKE ?)';
+        const searchTerm = `%${search}%`;
+        params.push(searchTerm, searchTerm);
+      }
+      
+      if (categoria) {
+        whereClause += ' AND p.categoria = ?';
+        params.push(categoria);
+      }
+      
+      const pageNum = parseInt(page) || 1;
+      const pageSizeNum = parseInt(pageSize) || 1000;
+      const offset = (pageNum - 1) * pageSizeNum;
+      
+      const [produtos] = await pool.execute(`
+        SELECT * FROM produtos p
+        ${whereClause}
+        ORDER BY p.descricao
+        LIMIT ? OFFSET ?
+      `, [...params, pageSizeNum, offset]);
+      
+      console.log(`✅ Retornando ${produtos.length} produtos para admin`);
+      
+      return res.json({
+        produtos,
+        pagination: {
+          page: pageNum,
+          pageSize: pageSizeNum,
+          total: produtos.length,
+          totalPages: Math.ceil(produtos.length / pageSizeNum)
+        }
+      });
+    }
+    
+    // Para outros perfis, filtrar por equipes
+    const [equipesUsuario] = await pool.execute(
+      'SELECT equipe_id FROM usuarios_equipes WHERE usuario_id = ?',
+      [req.user.id]
+    );
+    
+    const equipesIds = equipesUsuario.map(e => e.equipe_id);
+    console.log('   Equipes do usuário:', equipesIds);
+    
+    // Buscar produtos
+    let whereClause = 'WHERE p.ativo = 1';
+    let params = [];
+    
+    if (search) {
+      whereClause += ' AND (p.codprod LIKE ? OR p.descricao LIKE ?)';
+      const searchTerm = `%${search}%`;
+      params.push(searchTerm, searchTerm);
+    }
+    
+    if (categoria) {
+      whereClause += ' AND p.categoria = ?';
+      params.push(categoria);
+    }
+    
+    // Filtrar produtos:
+    // 1. Produtos com acesso_especifico = 0 (disponíveis para todos)
+    // 2. Produtos com acesso_especifico = 1 que estão vinculados às equipes do usuário
+    const query = `
+      SELECT DISTINCT p.* 
+      FROM produtos p
+      LEFT JOIN produtos_equipes_especificas pe ON p.id = pe.produto_id
+      ${whereClause}
+      AND (
+        p.acesso_especifico = 0
+        OR (p.acesso_especifico = 1 AND pe.equipe_id IN (${equipesIds.length > 0 ? equipesIds.join(',') : '0'}))
+      )
+      ORDER BY p.descricao
+      LIMIT ? OFFSET ?
+    `;
+    
+    const pageNum = parseInt(page) || 1;
+    const pageSizeNum = parseInt(pageSize) || 1000;
+    const offset = (pageNum - 1) * pageSizeNum;
+    
+    params.push(pageSizeNum, offset);
+    
+    const [produtos] = await pool.execute(query, params);
+    
+    console.log(`✅ Retornando ${produtos.length} produtos para galeria`);
+    
+    res.json({
+      produtos,
+      pagination: {
+        page: pageNum,
+        pageSize: pageSizeNum,
+        total: produtos.length,
+        totalPages: Math.ceil(produtos.length / pageSizeNum)
+      }
     });
-    
-    console.log(`✅ Retornando ${result.produtos?.length || 0} produtos para galeria`);
-    
-    res.json(result);
   } catch (error) {
     console.error('❌ Erro ao buscar produtos para galeria:', error);
     res.status(500).json({ error: 'Erro ao consultar catálogo' });
@@ -35,48 +196,75 @@ router.get('/galeria', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const { search, categoria, page = 1, pageSize = 20 } = req.query;
+    const pool = require('../config/db.mysql');
     
-    // Se o usuário for SOLICITANTE, filtrar por categoria de acesso
+    // Se o usuário for SOLICITANTE, filtrar por categoria de acesso E equipes
     if (req.user && req.user.perfil === 'solicitante') {
-      const pool = require('../config/db.mysql');
-      
       console.log('🏢 Buscando produtos para SOLICITANTE...');
       console.log('   Categoria de acesso:', req.user.categoria_acesso);
       
+      // Buscar equipes do usuário
+      const [equipesUsuario] = await pool.execute(
+        'SELECT equipe_id FROM usuarios_equipes WHERE usuario_id = ?',
+        [req.user.id]
+      );
+      
+      const equipesIds = equipesUsuario.map(e => e.equipe_id);
+      console.log('   Equipes do usuário:', equipesIds);
+      
       // Buscar produtos com cont_oba = 'S' filtrados por categoria
-      let query = `
-        SELECT p.* 
-        FROM produtos p
-        WHERE p.ativo = 1 
-        AND p.cont_oba = 'S'
-      `;
+      // OU produtos com acesso específico para as equipes do usuário
+      let whereClause = 'WHERE p.ativo = 1';
       const params = [];
       
-      // Filtrar por categoria de acesso do usuário
+      // Filtrar por categoria de acesso do usuário (para produtos OBA)
+      let categoriaFilter = '';
       if (req.user.categoria_acesso === 'facility') {
-        query += ` AND p.categoria_facility = 1`;
+        categoriaFilter = 'p.categoria_facility = 1';
       } else if (req.user.categoria_acesso === 'manipulacao') {
-        query += ` AND p.categoria_manipulacao = 1`;
+        categoriaFilter = 'p.categoria_manipulacao = 1';
       } else if (req.user.categoria_acesso === 'ambas') {
-        // Mostrar produtos que tenham pelo menos uma das categorias
-        query += ` AND (p.categoria_facility = 1 OR p.categoria_manipulacao = 1)`;
+        categoriaFilter = '(p.categoria_facility = 1 OR p.categoria_manipulacao = 1)';
+      }
+      
+      // Produtos disponíveis:
+      // 1. Produtos OBA (cont_oba = 'S') com categoria correta
+      // 2. Produtos com acesso_especifico = 0 (todos)
+      // 3. Produtos com acesso_especifico = 1 vinculados às equipes do usuário
+      if (categoriaFilter) {
+        whereClause += ` AND (
+          (p.cont_oba = 'S' AND ${categoriaFilter})
+          OR p.acesso_especifico = 0
+          OR (p.acesso_especifico = 1 AND pe.equipe_id IN (${equipesIds.length > 0 ? equipesIds.join(',') : '0'}))
+        )`;
+      } else {
+        whereClause += ` AND (
+          p.acesso_especifico = 0
+          OR (p.acesso_especifico = 1 AND pe.equipe_id IN (${equipesIds.length > 0 ? equipesIds.join(',') : '0'}))
+        )`;
       }
       
       if (search) {
-        query += ` AND (p.descricao LIKE ? OR p.codprod LIKE ?)`;
+        whereClause += ` AND (p.descricao LIKE ? OR p.codprod LIKE ?)`;
         params.push(`%${search}%`, `%${search}%`);
       }
       
       if (categoria) {
-        query += ` AND p.categoria = ?`;
+        whereClause += ` AND p.categoria = ?`;
         params.push(categoria);
       }
       
-      query += ` ORDER BY p.descricao`;
+      const query = `
+        SELECT DISTINCT p.* 
+        FROM produtos p
+        LEFT JOIN produtos_equipes_especificas pe ON p.id = pe.produto_id
+        ${whereClause}
+        ORDER BY p.descricao
+      `;
       
       const [produtos] = await pool.execute(query, params);
       
-      console.log(`✅ Retornando ${produtos.length} produtos filtrados por categoria para SOLICITANTE`);
+      console.log(`✅ Retornando ${produtos.length} produtos para SOLICITANTE`);
       
       return res.json({
         produtos,
@@ -86,8 +274,72 @@ router.get('/', async (req, res) => {
       });
     }
     
-    // Admin e Gestor veem todos os produtos
-    console.log('🔍 Buscando todos os produtos para admin/gestor...');
+    // Para VENDEDOR e GESTOR, filtrar por equipes
+    if (req.user && (req.user.perfil === 'vendedor' || req.user.perfil === 'gestor')) {
+      console.log('🛒 Buscando produtos para VENDEDOR/GESTOR...');
+      
+      // Buscar equipes do usuário
+      const [equipesUsuario] = await pool.execute(
+        'SELECT equipe_id FROM usuarios_equipes WHERE usuario_id = ?',
+        [req.user.id]
+      );
+      
+      const equipesIds = equipesUsuario.map(e => e.equipe_id);
+      console.log('   Equipes do usuário:', equipesIds);
+      
+      let whereClause = 'WHERE p.ativo = 1';
+      let params = [];
+      
+      if (search) {
+        whereClause += ' AND (p.codprod LIKE ? OR p.descricao LIKE ?)';
+        const searchTerm = `%${search}%`;
+        params.push(searchTerm, searchTerm);
+      }
+      
+      if (categoria) {
+        whereClause += ' AND p.categoria = ?';
+        params.push(categoria);
+      }
+      
+      // Filtrar produtos:
+      // 1. Produtos com acesso_especifico = 0 (disponíveis para todos)
+      // 2. Produtos com acesso_especifico = 1 que estão vinculados às equipes do usuário
+      const query = `
+        SELECT DISTINCT p.* 
+        FROM produtos p
+        LEFT JOIN produtos_equipes_especificas pe ON p.id = pe.produto_id
+        ${whereClause}
+        AND (
+          p.acesso_especifico = 0
+          OR (p.acesso_especifico = 1 AND pe.equipe_id IN (${equipesIds.length > 0 ? equipesIds.join(',') : '0'}))
+        )
+        ORDER BY p.descricao
+        LIMIT ? OFFSET ?
+      `;
+      
+      const pageNum = parseInt(page) || 1;
+      const pageSizeNum = parseInt(pageSize) || 20;
+      const offset = (pageNum - 1) * pageSizeNum;
+      
+      params.push(pageSizeNum, offset);
+      
+      const [produtos] = await pool.execute(query, params);
+      
+      console.log(`✅ Retornando ${produtos.length} produtos para vendedor/gestor`);
+      
+      return res.json({
+        produtos,
+        pagination: {
+          page: pageNum,
+          pageSize: pageSizeNum,
+          total: produtos.length,
+          totalPages: Math.ceil(produtos.length / pageSizeNum)
+        }
+      });
+    }
+    
+    // Admin vê todos os produtos
+    console.log('🔍 Buscando todos os produtos para admin...');
     const result = await produtoSyncService.buscarProdutos({
       search,
       categoria,
@@ -222,6 +474,27 @@ router.delete('/:id', requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('Erro ao excluir produto:', error);
     res.status(500).json({ error: 'Erro ao excluir produto' });
+  }
+});
+
+// Buscar equipes específicas de um produto
+router.get('/:id/equipes-especificas', async (req, res) => {
+  try {
+    const pool = require('../config/db.mysql');
+    const { id } = req.params;
+    
+    const [equipes] = await pool.execute(`
+      SELECT e.id, e.nome, e.cnpj, pe.criado_em
+      FROM produtos_equipes_especificas pe
+      INNER JOIN equipes e ON e.id = pe.equipe_id
+      WHERE pe.produto_id = ?
+      ORDER BY e.nome
+    `, [id]);
+    
+    res.json(equipes);
+  } catch (error) {
+    console.error('Erro ao buscar equipes específicas:', error);
+    res.status(500).json({ error: 'Erro ao buscar equipes' });
   }
 });
 

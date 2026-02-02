@@ -155,6 +155,42 @@ class EmailService {
     }
   }
   
+  async enviarSolicitacaoAprovacaoLote(loteData) {
+    try {
+      const { pedidos, gestorEmail } = loteData;
+      
+      if (!gestorEmail) {
+        console.log('  Email do gestor nao configurado');
+        return { success: false, error: 'Email do gestor nao configurado' };
+      }
+      
+      const htmlTemplate = this.gerarTemplateAprovacaoLote(pedidos);
+      
+      const totalGeral = pedidos.reduce((sum, p) => sum + parseFloat(p.pedido.valor_total || 0), 0);
+      const lotePedido = pedidos[0].pedido.lote_pedido;
+      
+      const mailOptions = {
+        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+        to: gestorEmail,
+        subject: `APROVACAO NECESSÁRIA - LOTE com ${pedidos.length} Pedidos - Total: R$ ${totalGeral.toFixed(2)}`,
+        html: htmlTemplate,
+        headers: {
+          'Content-Type': 'text/html; charset=UTF-8'
+        }
+      };
+      
+      const transporter = this.getTransporter();
+      const info = await transporter.sendMail(mailOptions);
+      
+      console.log(` Email de aprovacao de LOTE enviado para ${gestorEmail} - ${pedidos.length} pedidos`);
+      
+      return { success: true, messageId: info.messageId };
+    } catch (error) {
+      console.error(' Erro ao enviar email de aprovacao de lote:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  
   async enviarNotificacaoPedidoPendente(pedidoData) {
     try {
       const { pedido, equipe, itens, vendedorEmail, motivoPendencia } = pedidoData;
@@ -377,6 +413,134 @@ class EmailService {
         
         <div style="background: #1f2937; color: #e5e7eb; padding: 15px; border-radius: 0 0 10px 10px; text-align: center;">
           <p style="margin: 0; font-size: 14px;">© ${new Date().getFullYear()} B2B Brago Distribuidora - Sistema de Gestao Comercial</p>
+        </div>
+        
+      </body>
+      </html>
+    `;
+  }
+  
+  gerarTemplateAprovacaoLote(pedidos) {
+    const formatMoney = (value) => {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(value);
+    };
+    
+    const formatDate = (date) => {
+      return new Date(date).toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'America/Sao_Paulo'
+      });
+    };
+    
+    const totalGeral = pedidos.reduce((sum, p) => sum + parseFloat(p.pedido.valor_total || 0), 0);
+    const lotePedido = pedidos[0].pedido.lote_pedido;
+    const dataPrimeiro = pedidos[0].pedido.data;
+    
+    const pedidosHtml = pedidos.map(p => {
+      const itensHtml = p.itens.map(item => `
+        <tr style="border-bottom: 1px solid #e5e5e5;">
+          <td style="padding: 6px; font-size: 13px;">${item.codprod}</td>
+          <td style="padding: 6px; font-size: 13px;">${item.descricao}</td>
+          <td style="padding: 6px; text-align: center; font-size: 13px;">${item.quantidade}</td>
+          <td style="padding: 6px; text-align: right; font-size: 13px;">${formatMoney(item.valor_unitario || 0)}</td>
+          <td style="padding: 6px; text-align: right; font-weight: bold; font-size: 13px;">${formatMoney((item.valor_unitario || 0) * (item.quantidade || 0))}</td>
+        </tr>
+      `).join('');
+      
+      return `
+        <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #e5e5e5;">
+            <div>
+              <h3 style="margin: 0; color: #3b82f6;">Pedido #${p.pedido.id}</h3>
+              <p style="margin: 5px 0 0 0; color: #6b7280; font-size: 14px;">${p.equipe.nome}</p>
+            </div>
+            <div style="text-align: right;">
+              <p style="margin: 0; font-size: 20px; font-weight: bold; color: #10b981;">${formatMoney(p.pedido.valor_total)}</p>
+            </div>
+          </div>
+          
+          <p style="margin: 5px 0;"><strong>Código ERP:</strong> ${p.pedido.codigo_erp || '<span style="color: #9ca3af;">Não informado</span>'}</p>
+          <p style="margin: 5px 0;"><strong>CGC/CNPJ:</strong> ${p.pedido.cgc || '<span style="color: #9ca3af;">Não informado</span>'}</p>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+              <tr style="background: #f3f4f6;">
+                <th style="padding: 8px; text-align: left; font-size: 12px;">Código</th>
+                <th style="padding: 8px; text-align: left; font-size: 12px;">Produto</th>
+                <th style="padding: 8px; text-align: center; font-size: 12px;">Qtd</th>
+                <th style="padding: 8px; text-align: right; font-size: 12px;">Valor Unit.</th>
+                <th style="padding: 8px; text-align: right; font-size: 12px;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itensHtml}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }).join('');
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Aprovação de Lote - B2B Brago Distribuidora</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 700px; margin: 0 auto; padding: 20px;">
+        
+        <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px;">🗂️ APROVAÇÃO DE LOTE NECESSÁRIA</h1>
+          <p style="margin: 10px 0 0 0; font-size: 18px;">${pedidos.length} Pedidos Aguardando Aprovação</p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 20px; border: 1px solid #e5e5e5;">
+          
+          <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+            <p style="margin: 0; font-weight: bold; color: #1e40af;">ℹ️ Informações do Lote:</p>
+            <p style="margin: 5px 0 0 0; color: #1e40af;">
+              <strong>Total de Pedidos:</strong> ${pedidos.length}<br>
+              <strong>Valor Total:</strong> <span style="font-size: 24px; font-weight: bold;">${formatMoney(totalGeral)}</span><br>
+              <strong>Data:</strong> ${formatDate(dataPrimeiro)}<br>
+              <strong>Lote:</strong> ${lotePedido}
+            </p>
+          </div>
+          
+          <h2 style="color: #3b82f6; margin-top: 20px;">📦 Pedidos do Lote</h2>
+          
+          ${pedidosHtml}
+          
+          <div style="background: #dcfce7; border: 2px solid #22c55e; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: center;">
+            <h3 style="margin: 0 0 15px 0; color: #166534;">👨‍💼 Ação Necessária</h3>
+            <p style="margin: 0 0 15px 0; color: #166534;">
+              Acesse o painel administrativo para:<br>
+              <strong>• Aprovar TODOS os ${pedidos.length} pedidos do lote</strong><br>
+              <strong>• Rejeitar TODOS os pedidos com justificativa</strong><br>
+              <strong>• Aprovar/Rejeitar individualmente</strong>
+            </p>
+            <a href="http://localhost:3100/gestor.html" style="display: inline-block; background: #22c55e; color: white; text-decoration: none; padding: 12px 30px; border-radius: 8px; font-weight: bold; margin-top: 10px;">
+              ✓ Acessar Painel do Gestor
+            </a>
+          </div>
+          
+          <div style="background: white; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: center;">
+            <p style="margin: 0; color: #666;">
+              ⚡ Este email foi enviado automaticamente pelo sistema B2B Brago Distribuidora<br>
+              <strong>Resposta Urgente Necessária!</strong>
+            </p>
+          </div>
+        </div>
+        
+        <div style="background: #1f2937; color: #e5e7eb; padding: 15px; border-radius: 0 0 10px 10px; text-align: center;">
+          <p style="margin: 0; font-size: 14px;">© ${new Date().getFullYear()} B2B Brago Distribuidora - Sistema de Gestão Comercial</p>
         </div>
         
       </body>

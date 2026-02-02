@@ -124,22 +124,42 @@ router.patch('/:id', requireRole('admin', 'gestor'), async (req, res) => {
     vals.push(anoAtual);
   }
   
-  // Quando limite_total muda, atualizar também limite_credito e ajustar limite_disponivel
+  // Quando limite_total (Limite de Crédito) muda:
+  // - Atualizar limite_credito, limite_total, saldo_atual
+  // - Atualizar limite_mensal com o mesmo valor
+  // - Resetar limite_disponivel para o novo limite (não há pedidos aprovados consumindo)
   if (limite_total !== undefined) {
-    const [[equipe]] = await pool.execute('SELECT limite_credito, limite_disponivel FROM equipes WHERE id = ?', [id]);
-    if (equipe) {
-      const limiteAnterior = Number(equipe.limite_credito) || 0;
-      const diferenca = Number(limite_total) - limiteAnterior;
-      
-      sets.push('limite_total = ?');
-      vals.push(limite_total);
-      sets.push('saldo_atual = ?');
-      vals.push(limite_total);
-      sets.push('limite_credito = ?');
-      vals.push(limite_total);
-      sets.push('limite_disponivel = limite_disponivel + ?');
-      vals.push(diferenca);
-    }
+    const agora = new Date();
+    const mesAtual = agora.getMonth() + 1;
+    const anoAtual = agora.getFullYear();
+    
+    // Buscar valor de pedidos aprovados desta equipe para calcular limite_disponivel correto
+    const [[consumo]] = await pool.execute(
+      'SELECT COALESCE(SUM(valor_total), 0) as consumido FROM pedidos WHERE equipe_id = ? AND status = ?',
+      [id, 'APROVADO']
+    );
+    const consumido = parseFloat(consumo.consumido) || 0;
+    const novoLimiteDisponivel = Number(limite_total) - consumido;
+    
+    console.log(`💰 Atualizando limite da equipe ${id}:`);
+    console.log(`   Novo limite: R$ ${Number(limite_total).toFixed(2)}`);
+    console.log(`   Pedidos aprovados consumidos: R$ ${consumido.toFixed(2)}`);
+    console.log(`   Limite disponível calculado: R$ ${novoLimiteDisponivel.toFixed(2)}`);
+    
+    sets.push('limite_total = ?');
+    vals.push(limite_total);
+    sets.push('saldo_atual = ?');
+    vals.push(limite_total);
+    sets.push('limite_credito = ?');
+    vals.push(limite_total);
+    sets.push('limite_mensal = ?');
+    vals.push(limite_total);
+    sets.push('limite_disponivel = ?');
+    vals.push(novoLimiteDisponivel);
+    sets.push('mes_referencia = ?');
+    vals.push(mesAtual);
+    sets.push('ano_referencia = ?');
+    vals.push(anoAtual);
   }
   
   if (!sets.length) return res.status(400).json({ error: 'Nada para atualizar' });

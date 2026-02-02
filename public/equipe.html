@@ -124,7 +124,7 @@
 
     .credito-info {
       position: relative;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
       color: white;
       padding: 0.5rem 1rem;
       border-radius: 8px;
@@ -132,14 +132,14 @@
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
       cursor: pointer;
       transition: all 0.3s ease;
     }
 
     .credito-info:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 4px 16px rgba(0, 102, 204, 0.4);
     }
 
     .credito-info.multiple-stores::after {
@@ -189,7 +189,7 @@
 
     .equipes-dropdown-header {
       padding: 1rem;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
       color: white;
       border-radius: 12px 12px 0 0;
       font-weight: 600;
@@ -310,7 +310,7 @@
     }
 
     .modal-header-selecao {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
       color: white;
       padding: 1.25rem 1.5rem;
       text-align: center;
@@ -376,7 +376,7 @@
 
     .pesquisa-equipes input:focus {
       outline: none;
-      border-color: #667eea;
+      border-color: #0066cc;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
 
@@ -427,7 +427,7 @@
     }
 
     .equipe-selecao-item:hover {
-      border-color: #667eea;
+      border-color: #0066cc;
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
       transform: translateY(-2px);
     }
@@ -1223,6 +1223,131 @@
         font-size: 0.9rem;
       }
     }
+    
+    /* Animação de sucesso centralizada */
+    .success-animation-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .success-animation-overlay.show {
+      opacity: 1;
+    }
+    
+    .success-animation-modal {
+      background: white;
+      border-radius: 20px;
+      padding: 3rem 2.5rem;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transform: scale(0.8);
+      transition: transform 0.3s ease;
+    }
+    
+    .success-animation-overlay.show .success-animation-modal {
+      transform: scale(1);
+    }
+    
+    .success-check-icon {
+      font-size: 5rem;
+      color: #22c55e;
+      margin-bottom: 1.5rem;
+      animation: checkBounce 0.6s ease;
+    }
+    
+    @keyframes checkBounce {
+      0% {
+        transform: scale(0) rotate(-180deg);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.2) rotate(10deg);
+      }
+      100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+    
+    .success-title {
+      font-size: 2rem;
+      color: #1f2937;
+      margin: 0 0 1rem 0;
+      font-weight: 700;
+    }
+    
+    .success-subtitle {
+      font-size: 1.1rem;
+      color: #6b7280;
+      margin: 0 0 1.5rem 0;
+      font-weight: 600;
+    }
+    
+    .success-equipes-list ul {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .success-equipes-list li {
+      padding: 0.75rem;
+      background: #f3f4f6;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #1f2937;
+      font-weight: 500;
+    }
+    
+    .success-equipes-list li i {
+      color: #3b82f6;
+    }
+    
+    .success-total {
+      font-size: 1.25rem;
+      color: #1f2937;
+      margin: 1.5rem 0 1rem 0;
+      padding: 1rem;
+      background: #dcfce7;
+      border-radius: 10px;
+      border-left: 4px solid #22c55e;
+    }
+    
+    .success-total strong {
+      color: #22c55e;
+      font-size: 1.4rem;
+    }
+    
+    .success-info {
+      font-size: 0.95rem;
+      color: #6b7280;
+      line-height: 1.6;
+      margin: 1rem 0 0 0;
+      padding: 1rem;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+    
+    .success-content {
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -1241,21 +1366,7 @@
           </button>
         </nav>
         <div class="user-info">
-          <span id="userGreeting">Carregando...</span>
           <span id="userEquipesBadge" style="display: none;"></span>
-          <div class="credito-info" id="creditoInfo" style="display: none;" onclick="app.toggleEquipesDropdown()">
-            <span class="credito-label"><span id="equipeNomeAtual"></span></span>
-            <span class="credito-valor" id="creditoDisponivel"></span>
-            <!-- Dropdown de equipes -->
-            <div class="equipes-dropdown" id="equipesDropdown" onclick="event.stopPropagation()">
-              <div class="equipes-dropdown-header">
-                <i class="fas fa-store"></i> Selecione a Loja para o Pedido
-              </div>
-              <div id="equipesDropdownList">
-                <!-- Lista será preenchida via JS -->
-              </div>
-            </div>
-          </div>
           <button class="cart-toggle" onclick="app.toggleCarrinho()">
             <i class="fas fa-shopping-cart"></i>
             Carrinho
@@ -1271,11 +1382,34 @@
   </header>
 
   <div class="container">
+    <!-- Saudação e Lojas Selecionadas -->
+    <div style="margin: 2rem 0;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h1 style="font-size: 2rem; font-weight: 700; color: #1f2937; margin: 0 0 0.5rem 0;">Catálogo de Produtos</h1>
+          <p style="color: #6b7280; font-size: 1rem; margin: 0;">
+            <span id="saudacaoHorario">Olá</span>, <span id="userGreetingPage" style="font-weight: 600; color: #3b82f6;">Carregando...</span>! Qual solicitação faremos hoje?
+          </p>
+        </div>
+        <div class="credito-info" id="creditoInfo" style="display: none;" onclick="app.toggleEquipesDropdown()">
+          <span class="credito-label"><span id="equipeNomeAtual"></span></span>
+          <span class="credito-valor" id="creditoDisponivel"></span>
+          <!-- Dropdown de equipes -->
+          <div class="equipes-dropdown" id="equipesDropdown" onclick="event.stopPropagation()">
+            <div class="equipes-dropdown-header">
+              <i class="fas fa-store"></i> Selecione a Loja para o Pedido
+            </div>
+            <div id="equipesDropdownList">
+              <!-- Lista será preenchida via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <div class="main-layout" id="mainLayout">
       <!-- Products Section -->
       <div class="products-section" id="produtosSection">
-        <h2><i class="fas fa-boxes"></i> Catálogo de Produtos</h2>
-        
         <div class="filters">
           <div class="search-box">
             <i class="fas fa-search"></i>

@@ -328,15 +328,15 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
         <div class="equipe-info">
           <div class="equipe-nome">#${equipe.id} - ${escapeHtml(equipe.nome)}</div>
           <div class="equipe-detalhes">
-            ${equipe.codigo_erp ? `<span>📋 ${escapeHtml(equipe.codigo_erp)}</span>` : ''}
-            ${equipe.cgc ? `<span>📄 ${escapeHtml(equipe.cgc)}</span>` : ''}
+            ${equipe.codigo_erp ? `<span><i class="fas fa-barcode"></i> ${escapeHtml(equipe.codigo_erp)}</span>` : ''}
+            ${equipe.cgc ? `<span><i class="fas fa-file-alt"></i> ${escapeHtml(equipe.cgc)}</span>` : ''}
           </div>
         </div>
         <div class="equipe-status-badge ${statusClass}">
           ${statusTexto} • ${percentualUtilizado.toFixed(0)}%
         </div>
         <div class="equipe-limite-badge">
-          💰 ${formatMoney(limiteDisponivel)} / ${formatMoney(limiteCredito)}
+          <i class="fas fa-wallet"></i> ${formatMoney(limiteCredito)} | <i class="fas fa-minus-circle"></i> ${formatMoney(utilizado)}
         </div>
         <i class="fas fa-chevron-down equipe-expand-icon"></i>
       </div>
@@ -346,15 +346,15 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
           <!-- Estatísticas -->
           <div class="equipe-stats-grid">
             <div class="equipe-stat-box">
-              <div class="equipe-stat-label">💳 Limite Total</div>
+              <div class="equipe-stat-label"><i class="fas fa-wallet"></i> Limite Total</div>
               <div class="equipe-stat-value">${formatMoney(limiteCredito)}</div>
             </div>
             <div class="equipe-stat-box">
-              <div class="equipe-stat-label">✅ Disponível</div>
+              <div class="equipe-stat-label"><i class="fas fa-check-circle"></i> Disponível</div>
               <div class="equipe-stat-value">${formatMoney(limiteDisponivel)}</div>
             </div>
             <div class="equipe-stat-box">
-              <div class="equipe-stat-label">📊 Utilizado</div>
+              <div class="equipe-stat-label"><i class="fas fa-chart-pie"></i> Utilizado</div>
               <div class="equipe-stat-value">${formatMoney(utilizado)}</div>
               <div class="equipe-progress-bar">
                 <div class="equipe-progress-fill ${progressClass}" style="width: ${Math.min(percentualUtilizado, 100)}%"></div>
@@ -828,6 +828,29 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
       $('#editCategoria_manipulacao').checked = produto.categoria_manipulacao || false;
       $('#editFoto').value = produto.foto || '';
       $('#editObservacoes').value = produto.observacoes || '';
+      $('#editCont_oba').value = produto.cont_oba || 'N';
+      $('#editAcessoEspecifico').value = produto.acesso_especifico || 0;
+      
+      // Mostrar preview da foto atual se houver
+      const fotoAtual = produto.foto_path || produto.foto;
+      if (produto.acesso_especifico === 1) {
+        $('#editEquipesEspecificasContainer').style.display = 'block';
+        
+        // Buscar equipes específicas
+        try {
+          const equipesEspecificas = await api(`/api/produtos/${id}/equipes-especificas`);
+          const equipesIds = equipesEspecificas.map(e => e.equipe_id || e.id);
+          
+          // Marcar checkboxes
+          document.querySelectorAll('input[name="edit_equipe_especifica_check"]').forEach(cb => {
+            cb.checked = equipesIds.includes(parseInt(cb.value));
+          });
+        } catch (err) {
+          console.error('Erro ao carregar equipes específicas:', err);
+        }
+      } else {
+        $('#editEquipesEspecificasContainer').style.display = 'none';
+      }
       
       $('#modalEditarProduto').style.display = 'flex';
     } catch (error) {
@@ -842,6 +865,38 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
   window.salvarEdicaoProduto = async function() {
     try {
       const id = $('#editProdutoId').value;
+      let fotoPath = null;
+      
+      // 1. Fazer upload da nova foto se houver
+      const fotoUpload = $('#editFotoUpload');
+      if (fotoUpload && fotoUpload.files && fotoUpload.files.length > 0) {
+        const formData = new FormData();
+        formData.append('foto', fotoUpload.files[0]);
+        
+        console.log('📤 Enviando foto para upload (edição)...');
+        
+        const uploadResult = await fetch('/api/produtos/upload-foto', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('nexus_b2b_token')}`
+          },
+          body: formData
+        });
+        
+        console.log('📥 Resposta do upload:', uploadResult.status);
+        
+        if (!uploadResult.ok) {
+          const errorText = await uploadResult.text();
+          console.error('❌ Erro no upload:', errorText);
+          throw new Error(`Erro ao fazer upload da foto: ${uploadResult.status} - ${errorText}`);
+        }
+        
+        const uploadData = await uploadResult.json();
+        fotoPath = uploadData.fotoPath;
+        console.log('✅ Foto uploaded com sucesso:', fotoPath);
+      }
+      
+      // 2. Preparar dados do produto
       const dados = {
         codprod: $('#editCodprod').value,
         descricao: $('#editDescricao').value,
@@ -853,8 +908,11 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
         categoria: $('#editCategoria').value,
         categoria_facility: $('#editCategoria_facility').checked,
         categoria_manipulacao: $('#editCategoria_manipulacao').checked,
-        foto: $('#editFoto').value,
-        observacoes: $('#editObservacoes').value
+        foto: $('#editFoto').value || null,
+        foto_path: fotoPath,
+        observacoes: $('#editObservacoes').value,
+        cont_oba: $('#editCont_oba').value,
+        acesso_especifico: Number($('#editAcessoEspecifico').value)
       };
       
       // Validar que pelo menos uma categoria está selecionada
@@ -863,13 +921,37 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
         return;
       }
       
+      // 3. Coletar equipes selecionadas
+      // Equipes para contrato OBA
+      if (dados.cont_oba === 'S' && window.getEquipesSelecionadasEdit) {
+        dados.equipes_contratos = window.getEquipesSelecionadasEdit();
+      }
+      
+      // Equipes com acesso específico
+      if (dados.acesso_especifico === 1 && window.getEquipesEspecificasSelecionadasEdit) {
+        dados.equipes_especificas = window.getEquipesEspecificasSelecionadasEdit();
+        
+        if (!dados.equipes_especificas || dados.equipes_especificas.length === 0) {
+          showMessage('Selecione pelo menos uma equipe para acesso específico', 'error');
+          return;
+        }
+      }
+      
+      // 4. Atualizar produto
       await api(`/api/produtos/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dados)
       });
       
-      showMessage('Produto atualizado com sucesso!');
+      // Mensagem com informação sobre equipes
+      let mensagem = 'Produto atualizado com sucesso!';
+      if (dados.acesso_especifico === 1 && dados.equipes_especificas && dados.equipes_especificas.length > 0) {
+        mensagem += ` Disponível apenas para ${dados.equipes_especificas.length} equipe(s) específica(s).`;
+      } else {
+        mensagem += ' Disponível para todas as equipes.';
+      }
+      showMessage(mensagem);
       fecharModalProduto();
       carregarProdutos();
     } catch (error) {
@@ -1245,6 +1327,38 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
     e.preventDefault();
     
     try {
+      let fotoPath = null;
+      
+      // 1. Fazer upload da foto se houver
+      const fotoUpload = $('#fotoUpload');
+      if (fotoUpload && fotoUpload.files && fotoUpload.files.length > 0) {
+        const formData = new FormData();
+        formData.append('foto', fotoUpload.files[0]);
+        
+        console.log('📤 Enviando foto para upload...');
+        
+        const uploadResult = await fetch('/api/produtos/upload-foto', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('nexus_b2b_token')}`
+          },
+          body: formData
+        });
+        
+        console.log('📥 Resposta do upload:', uploadResult.status);
+        
+        if (!uploadResult.ok) {
+          const errorText = await uploadResult.text();
+          console.error('❌ Erro no upload:', errorText);
+          throw new Error(`Erro ao fazer upload da foto: ${uploadResult.status} - ${errorText}`);
+        }
+        
+        const uploadData = await uploadResult.json();
+        fotoPath = uploadData.fotoPath;
+        console.log('✅ Foto uploaded com sucesso:', fotoPath);
+      }
+      
+      // 2. Preparar dados do produto
       const dados = {
         codprod: $('#codprod').value,
         descricao: $('#descricao').value,
@@ -1256,9 +1370,11 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
         categoria: $('#categoria').value,
         categoria_facility: $('#categoria_facility').checked,
         categoria_manipulacao: $('#categoria_manipulacao').checked,
-        foto: $('#foto').value,
+        foto: $('#foto').value || null,
+        foto_path: fotoPath,
         observacoes: $('#observacoes').value,
-        cont_oba: $('#cont_oba').value
+        cont_oba: $('#cont_oba').value,
+        acesso_especifico: Number($('#acesso_especifico').value)
       };
       
       // Validar que pelo menos uma categoria está selecionada
@@ -1267,36 +1383,41 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
         return;
       }
       
+      // 3. Coletar equipes selecionadas
+      // Equipes para contrato OBA (sistema antigo)
+      if (dados.cont_oba === 'S' && window.getEquipesSelecionadas) {
+        dados.equipes_contratos = window.getEquipesSelecionadas();
+      }
+      
+      // Equipes com acesso específico (novo sistema)
+      if (dados.acesso_especifico === 1 && window.getEquipesEspecificasSelecionadas) {
+        dados.equipes_especificas = window.getEquipesEspecificasSelecionadas();
+        
+        if (!dados.equipes_especificas || dados.equipes_especificas.length === 0) {
+          showMessage('Selecione pelo menos uma equipe para acesso específico', 'error');
+          return;
+        }
+      }
+      
+      // 4. Criar produto
       const result = await api('/api/produtos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dados)
       });
       
-      // Se cont_oba = 'S', atribuir às equipes selecionadas
-      if (dados.cont_oba === 'S' && window.getEquipesSelecionadas) {
-        const equipesSelecionadas = window.getEquipesSelecionadas();
-        const produtoId = result.id || result.produto?.id;
-        
-        if (produtoId && equipesSelecionadas.length > 0) {
-          for (const equipeId of equipesSelecionadas) {
-            try {
-              await api(`/api/equipes/${equipeId}/produtos`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ produtoId })
-              });
-            } catch (err) {
-              console.error(`Erro ao atribuir produto à equipe ${equipeId}:`, err);
-            }
-          }
-        }
+      // Mensagem com informação sobre equipes
+      let mensagem = 'Produto criado com sucesso!';
+      if (dados.acesso_especifico === 1 && dados.equipes_especificas && dados.equipes_especificas.length > 0) {
+        mensagem += ` Disponível apenas para ${dados.equipes_especificas.length} equipe(s) específica(s).`;
+      } else {
+        mensagem += ' Disponível para todas as equipes.';
       }
-      
-      showMessage('Produto criado com sucesso!');
+      showMessage(mensagem);
       $('#formNovoProduto').reset();
-      // Esconder seletor de equipes
       $('#equipesSelectorContainer').style.display = 'none';
+      $('#equipesEspecificasContainer').style.display = 'none';
+      $('#fotoPreview').style.display = 'none';
       carregarProdutos();
     } catch (error) {
       showMessage('Erro ao criar produto: ' + error.message, 'error');
@@ -1319,7 +1440,7 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
   });
   
   // === PEDIDOS ===
-  let pedidosState = { page: 1, pageSize: 10, status: '', totalPages: 1 };
+  let pedidosState = { page: 1, pageSize: 100, status: '', totalPages: 1 };
   let equipesGestor = []; // Equipes que o gestor pode gerenciar
   let equipesFiltradasPedidos = []; // Equipes selecionadas no filtro
   
@@ -1350,7 +1471,7 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
             checkbox.type = 'checkbox';
             checkbox.id = `filtro_equipe_${equipe.id}`;
             checkbox.value = equipe.id;
-            checkbox.checked = false; // Por padrão, nenhuma selecionada (mostra todas)
+            checkbox.checked = true; // Por padrão, todas selecionadas
             checkbox.onchange = () => {
               atualizarFiltroEquipes();
             };
@@ -1364,11 +1485,15 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
             container.appendChild(div);
           });
           
-          // Carregar filtro salvo do localStorage
+          // Carregar filtro salvo do localStorage, ou selecionar todas por padrão
           const filtroSalvo = localStorage.getItem('pedidos_equipes_filtro');
           if (filtroSalvo) {
             try {
               equipesFiltradasPedidos = JSON.parse(filtroSalvo);
+              // Desmarcar todas primeiro
+              const allCheckboxes = document.querySelectorAll('#equipesChecklistPedidos input[type="checkbox"]');
+              allCheckboxes.forEach(cb => cb.checked = false);
+              // Marcar apenas as salvas
               equipesFiltradasPedidos.forEach(id => {
                 const checkbox = $(`#filtro_equipe_${id}`);
                 if (checkbox) checkbox.checked = true;
@@ -1376,13 +1501,25 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
               atualizarContadorEquipes();
             } catch (e) {
               console.error('Erro ao carregar filtro salvo:', e);
+              // Em caso de erro, selecionar todas
+              selecionarTodasPorPadrao();
             }
+          } else {
+            // Se não tem filtro salvo, selecionar todas por padrão
+            selecionarTodasPorPadrao();
           }
         }
       }
     } catch (error) {
       console.error('Erro ao carregar equipes do gestor:', error);
     }
+  }
+  
+  // Função auxiliar para selecionar todas por padrão
+  function selecionarTodasPorPadrao() {
+    equipesFiltradasPedidos = equipesGestor.map(e => e.id);
+    localStorage.setItem('pedidos_equipes_filtro', JSON.stringify(equipesFiltradasPedidos));
+    atualizarContadorEquipes();
   }
   
   // Atualizar o filtro de equipes
@@ -1458,9 +1595,25 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
         countInfo.textContent = `${pedidosFiltrados.length} ${pedidosFiltrados.length === 1 ? 'pedido' : 'pedidos'}`;
       }
       
-      // Criar cards
+      // Agrupar pedidos por lote_pedido E status
+      const pedidosPorLote = {};
       pedidosFiltrados.forEach(pedido => {
-        const card = criarCardPedido(pedido);
+        // Chave única: lote + status (para separar pedidos de mesmo lote com status diferentes)
+        const loteKey = pedido.lote_pedido 
+          ? `${pedido.lote_pedido}-${pedido.status}`
+          : `individual-${pedido.id}`;
+        
+        if (!pedidosPorLote[loteKey]) {
+          pedidosPorLote[loteKey] = [];
+        }
+        pedidosPorLote[loteKey].push(pedido);
+      });
+      
+      // Criar cards (agrupados ou individuais)
+      Object.values(pedidosPorLote).forEach(grupoPedidos => {
+        const card = grupoPedidos.length > 1 
+          ? criarCardPedidoAgrupado(grupoPedidos)
+          : criarCardPedido(grupoPedidos[0]);
         container.appendChild(card);
       });
       
@@ -1561,8 +1714,184 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
     return card;
   }
   
+  function criarCardPedidoAgrupado(pedidos) {
+    const primeiro = pedidos[0];
+    const totalGeral = pedidos.reduce((sum, p) => sum + parseFloat(p.valor_total || 0), 0);
+    const statusPrimeiro = primeiro.status;
+    
+    // Todos os pedidos do lote devem ter o mesmo status
+    const todosIgual = pedidos.every(p => p.status === statusPrimeiro);
+    
+    let statusClass = 'warning';
+    let statusText = statusPrimeiro;
+    let cardClass = '';
+    
+    if (statusPrimeiro === 'PENDENTE_APROVACAO') {
+      statusClass = 'pendente';
+      statusText = 'PENDENTE APROVAÇÃO';
+      cardClass = 'pendente';
+    } else if (statusPrimeiro === 'APROVADO') {
+      statusClass = 'aprovado';
+      cardClass = 'aprovado';
+    } else if (statusPrimeiro === 'CANCELADO' || statusPrimeiro === 'REPROVADO') {
+      statusClass = 'cancelado';
+      cardClass = 'cancelado';
+    }
+    
+    const card = document.createElement('div');
+    card.className = `pedido-card-grupo ${cardClass}`;
+    card.id = `pedido-lote-${primeiro.lote_pedido}`;
+    
+    const dataFormatada = formatDate(primeiro.data);
+    const valorFormatado = formatMoney(totalGeral);
+    
+    card.innerHTML = `
+      <div class="pedido-card-header-grupo">
+        <div class="pedido-lote-info">
+          <i class="fas fa-layer-group"></i>
+          <span class="lote-badge">LOTE: ${pedidos.length} pedidos</span>
+        </div>
+        <div class="pedido-data">
+          <i class="fas fa-calendar"></i>
+          ${dataFormatada}
+        </div>
+        <div class="pedido-valor-total">${valorFormatado}</div>
+      </div>
+      
+      <div class="pedido-status-row">
+        <span class="pedido-status-badge ${statusClass}">
+          ${statusClass === 'pendente' ? '<i class="fas fa-clock"></i>' : ''}
+          ${statusClass === 'aprovado' ? '<i class="fas fa-check-circle"></i>' : ''}
+          ${statusClass === 'cancelado' ? '<i class="fas fa-times-circle"></i>' : ''}
+          ${statusText}
+        </span>
+      </div>
+      
+      <div class="pedidos-agrupados-lista">
+        ${pedidos.map(p => `
+          <div class="pedido-mini" id="pedido-mini-${p.id}">
+            <span class="pedido-mini-id">#${p.id}</span>
+            <span class="pedido-mini-equipe">${escapeHtml(p.equipe_nome || 'Equipe #' + p.equipe_id)}</span>
+            <span class="pedido-mini-valor">${formatMoney(p.valor_total)}</span>
+            <div class="pedido-mini-actions">
+              <button class="btn-mini" onclick="abrirDetalhesPedido(${p.id})" title="Ver detalhes">
+                <i class="fas fa-eye"></i>
+              </button>
+              ${statusPrimeiro === 'PENDENTE_APROVACAO' ? `
+                <button class="btn-mini btn-success" onclick="event.stopPropagation(); aprovarPedido(${p.id})" title="Aprovar">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="btn-mini btn-danger" onclick="event.stopPropagation(); rejeitarPedido(${p.id})" title="Rejeitar">
+                  <i class="fas fa-times"></i>
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      
+      <div class="pedido-actions-grupo">
+        ${statusPrimeiro === 'PENDENTE_APROVACAO' ? `
+          <button class="btn btn-success" onclick="aprovarTodoLote('${primeiro.lote_pedido}')">
+            <i class="fas fa-check-circle"></i> Aprovar Todos (${pedidos.length})
+          </button>
+          <button class="btn btn-danger" onclick="rejeitarTodoLote('${primeiro.lote_pedido}')">
+            <i class="fas fa-times-circle"></i> Rejeitar Todos
+          </button>
+        ` : ''}
+        <button class="btn btn-info btn-expandir-lote" onclick="expandirLote('${primeiro.lote_pedido}')">
+          <i class="fas fa-expand-alt"></i> Expandir Detalhes
+        </button>
+      </div>
+    `;
+    
+    return card;
+  }
+  
+  window.aprovarTodoLote = async function(lotePedido) {
+    if (!confirm('Aprovar TODOS os pedidos deste lote?\n\nApós aprovação:\n• O crédito será debitado de cada equipe\n• O vendedor receberá um email com todos os pedidos')) return;
+    
+    try {
+      // Buscar todos os pedidos do lote
+      const response = await api(`/api/pedidos?lote=${lotePedido}`);
+      const pedidosDoLote = response.pedidos || [];
+      
+      // Aprovar cada pedido
+      const promises = pedidosDoLote.map(p => 
+        api(`/api/pedidos/${p.id}/aprovar`, { 
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        })
+      );
+      
+      await Promise.all(promises);
+      
+      showMessage(`${pedidosDoLote.length} pedidos aprovados com sucesso! Email enviado ao vendedor.`, 'success');
+      carregarDashboard();
+      carregarPedidos();
+      carregarPedidosPendentes();
+    } catch (error) {
+      showMessage('Erro ao aprovar lote: ' + error.message, 'error');
+    }
+  };
+  
+  window.rejeitarTodoLote = async function(lotePedido) {
+    const motivo = prompt('Informe o motivo da rejeição para TODOS os pedidos:');
+    if (!motivo || motivo.trim() === '') return;
+    
+    try {
+      // Buscar todos os pedidos do lote
+      const response = await api(`/api/pedidos?lote=${lotePedido}`);
+      const pedidosDoLote = response.pedidos || [];
+      
+      // Rejeitar cada pedido
+      const promises = pedidosDoLote.map(p => 
+        api(`/api/pedidos/${p.id}/rejeitar`, { 
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ motivo_reprovacao: motivo })
+        })
+      );
+      
+      await Promise.all(promises);
+      
+      showMessage(`${pedidosDoLote.length} pedidos rejeitados com sucesso!`, 'success');
+      carregarDashboard();
+      carregarPedidos();
+      carregarPedidosPendentes();
+    } catch (error) {
+      showMessage('Erro ao rejeitar lote: ' + error.message, 'error');
+    }
+  };
+  
+  window.expandirLote = function(lotePedido) {
+    const card = document.getElementById(`pedido-lote-${lotePedido}`);
+    if (card) {
+      const lista = card.querySelector('.pedidos-agrupados-lista');
+      const btn = card.querySelector('.btn-expandir-lote');
+      
+      if (lista && btn) {
+        if (lista.style.maxHeight === 'none' || !lista.style.maxHeight) {
+          lista.style.maxHeight = '200px';
+          btn.innerHTML = '<i class="fas fa-expand-alt"></i> Expandir Detalhes';
+        } else {
+          lista.style.maxHeight = 'none';
+          btn.innerHTML = '<i class="fas fa-compress-alt"></i> Recolher Detalhes';
+        }
+      }
+    }
+  };
+  
   window.aprovarPedido = async function(id) {
     if (!confirm('Aprovar este pedido?\n\nApós aprovação:\n• O crédito será debitado da equipe\n• O vendedor receberá um email automaticamente')) return;
+    
+    // Feedback visual imediato
+    const pedidoMini = document.getElementById(`pedido-mini-${id}`);
+    if (pedidoMini) {
+      pedidoMini.style.opacity = '0.5';
+      pedidoMini.style.pointerEvents = 'none';
+    }
     
     try {
       const result = await api(`/api/pedidos/${id}/aprovar`, { 
@@ -1570,18 +1899,121 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})
       });
-      showMessage('Pedido aprovado com sucesso! Email enviado ao vendedor.', 'success');
-      carregarDashboard();
-      carregarPedidos();
-      carregarPedidosPendentes();
+      
+      // Animação de sucesso
+      mostrarAnimacaoSucesso(id, 'aprovado');
+      
+      // Mostrar modal bonito centralizado
+      mostrarAnimacaoAprovacao(id);
+      
+      // Aguardar animação antes de recarregar
+      setTimeout(() => {
+        carregarDashboard();
+        carregarPedidos();
+        carregarPedidosPendentes();
+      }, 3000);
     } catch (error) {
+      if (pedidoMini) {
+        pedidoMini.style.opacity = '1';
+        pedidoMini.style.pointerEvents = 'auto';
+      }
       showMessage('Erro ao aprovar pedido: ' + error.message, 'error');
     }
   };
   
+  // Função para mostrar animação de sucesso/rejeição
+  function mostrarAnimacaoSucesso(pedidoId, tipo) {
+    const pedidoMini = document.getElementById(`pedido-mini-${pedidoId}`);
+    if (!pedidoMini) return;
+    
+    // Criar overlay de animação
+    const overlay = document.createElement('div');
+    overlay.className = 'pedido-animation-overlay';
+    
+    const icon = document.createElement('div');
+    icon.className = tipo === 'aprovado' ? 'animation-check' : 'animation-x';
+    icon.innerHTML = tipo === 'aprovado' 
+      ? '<i class="fas fa-check-circle"></i>'
+      : '<i class="fas fa-times-circle"></i>';
+    
+    overlay.appendChild(icon);
+    pedidoMini.style.position = 'relative';
+    pedidoMini.appendChild(overlay);
+    
+    // Animar
+    setTimeout(() => {
+      overlay.classList.add('show');
+    }, 10);
+    
+    // Remover após animação
+    setTimeout(() => {
+      overlay.classList.remove('show');
+      setTimeout(() => overlay.remove(), 300);
+    }, 800);
+  }
+  
+  // Função para mostrar animação de aprovação centralizada
+  function mostrarAnimacaoAprovacao(pedidoId) {
+    // Criar overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'success-animation-overlay';
+    
+    // Criar modal
+    const modal = document.createElement('div');
+    modal.className = 'success-animation-modal';
+    
+    // Ícone de check animado
+    const icon = document.createElement('div');
+    icon.className = 'success-check-icon';
+    icon.innerHTML = '<i class="fas fa-check-circle"></i>';
+    
+    // Título
+    const title = document.createElement('h2');
+    title.className = 'success-title';
+    title.textContent = 'Pedido Aprovado!';
+    
+    // Conteúdo
+    const content = document.createElement('div');
+    content.className = 'success-content';
+    content.innerHTML = `
+      <p class="success-subtitle">Pedido #${pedidoId} aprovado com sucesso!</p>
+      <p class="success-info">
+        Crédito debitado da equipe<br>
+        Email enviado ao vendedor
+      </p>
+    `;
+    
+    // Montar modal
+    modal.appendChild(icon);
+    modal.appendChild(title);
+    modal.appendChild(content);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Animar entrada
+    setTimeout(() => {
+      overlay.classList.add('show');
+    }, 10);
+    
+    // Remover após 3 segundos
+    setTimeout(() => {
+      overlay.classList.remove('show');
+      setTimeout(() => {
+        overlay.remove();
+      }, 300);
+    }, 2800);
+  }
+  
   window.rejeitarPedido = async function(id) {
     const motivo = prompt('Informe o motivo da rejeição:');
     if (!motivo || motivo.trim() === '') return;
+    
+    // Feedback visual imediato
+    const pedidoMini = document.getElementById(`pedido-mini-${id}`);
+    if (pedidoMini) {
+      pedidoMini.style.opacity = '0.5';
+      pedidoMini.style.pointerEvents = 'none';
+    }
     
     try {
       await api(`/api/pedidos/${id}/rejeitar`, { 
@@ -1589,11 +2021,22 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ motivo_reprovacao: motivo })
       });
-      showMessage('Pedido rejeitado com sucesso!', 'success');
-      carregarDashboard();
-      carregarPedidos();
-      carregarPedidosPendentes();
+      
+      // Animação de rejeição
+      mostrarAnimacaoSucesso(id, 'rejeitado');
+      
+      // Aguardar animação antes de recarregar
+      setTimeout(() => {
+        showMessage('Pedido rejeitado com sucesso!', 'success');
+        carregarDashboard();
+        carregarPedidos();
+        carregarPedidosPendentes();
+      }, 1000);
     } catch (error) {
+      if (pedidoMini) {
+        pedidoMini.style.opacity = '1';
+        pedidoMini.style.pointerEvents = 'auto';
+      }
       showMessage('Erro ao rejeitar pedido: ' + error.message, 'error');
     }
   };
@@ -1660,10 +2103,8 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
   
   async function carregarUsuarios() {
     try {
-      // Carregar equipes primeiro se ainda não foram carregadas
-      if (equipesCache.length === 0) {
-        await carregarEquipesParaSelects();
-      }
+      // Sempre carregar equipes ao abrir a aba de usuários para garantir que os checkboxes sejam preenchidos
+      await carregarEquipesParaSelects();
       
       const params = new URLSearchParams({
         page: usuariosState.page,
@@ -1890,17 +2331,24 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
   
   async function carregarEquipesParaSelects() {
     try {
+      console.log('🔄 Carregando equipes para checkboxes...');
       const data = await api('/api/equipes');
       equipesCache = data.equipes || [];
       
+      console.log('✅ Equipes recebidas da API:', equipesCache.length);
+      
       // Atualizar checkboxes do formulário de novo usuário
-      const checkboxesContainer = $('#equipesCheckboxes');
+      const checkboxesContainer = $('#usuariosEquipesCheckboxes');
+      console.log('📦 Container encontrado:', !!checkboxesContainer);
+      
       if (checkboxesContainer) {
         checkboxesContainer.innerHTML = '';
         
         if (equipesCache.length === 0) {
+          console.log('⚠️ Nenhuma equipe disponível no cache');
           checkboxesContainer.innerHTML = '<p style="color: #9ca3af; text-align: center; padding: 1rem;">Nenhuma equipe disponível</p>';
         } else {
+          console.log('✅ Criando checkboxes para', equipesCache.length, 'equipes');
           equipesCache.forEach(equipe => {
             const div = document.createElement('div');
             div.className = 'equipe-checkbox-item';
@@ -1911,10 +2359,20 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
             `;
             checkboxesContainer.appendChild(div);
           });
+          console.log('✅ Checkboxes criados com sucesso!');
+          
+          // Resetar checkbox "Selecionar Todas"
+          const checkboxTodas = document.getElementById('selecionarTodasEquipes');
+          if (checkboxTodas) {
+            checkboxTodas.checked = false;
+            checkboxTodas.indeterminate = false;
+          }
         }
+      } else {
+        console.error('❌ Container #usuariosEquipesCheckboxes não encontrado no DOM!');
       }
     } catch (error) {
-      console.error('Erro ao carregar equipes:', error);
+      console.error('❌ Erro ao carregar equipes:', error);
     }
   }
   
@@ -1923,7 +2381,7 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
     const tagsContainer = $('#equipesSelecionadas');
     if (!tagsContainer) return;
     
-    const checkboxes = document.querySelectorAll('#equipesCheckboxes input[type="checkbox"]:checked');
+    const checkboxes = document.querySelectorAll('#usuariosEquipesCheckboxes input[type="checkbox"]:checked');
     tagsContainer.innerHTML = '';
     
     checkboxes.forEach(checkbox => {
@@ -1939,6 +2397,9 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
         tagsContainer.appendChild(tag);
       }
     });
+    
+    // Atualizar estado do checkbox "Selecionar Todas"
+    atualizarCheckboxSelecionarTodas();
   };
   
   // Função para remover equipe
@@ -1947,8 +2408,31 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
     if (checkbox) {
       checkbox.checked = false;
       window.atualizarEquipesSelecionadas();
+      atualizarCheckboxSelecionarTodas();
     }
   };
+  
+  // Função para selecionar/desselecionar todas as equipes
+  window.toggleTodasEquipes = function(marcar) {
+    const checkboxes = document.querySelectorAll('#usuariosEquipesCheckboxes input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+      checkbox.checked = marcar;
+    });
+    window.atualizarEquipesSelecionadas();
+  };
+  
+  // Função para atualizar estado do checkbox "Selecionar Todas"
+  function atualizarCheckboxSelecionarTodas() {
+    const checkboxTodas = document.getElementById('selecionarTodasEquipes');
+    if (!checkboxTodas) return;
+    
+    const checkboxes = document.querySelectorAll('#usuariosEquipesCheckboxes input[type="checkbox"]');
+    const totalCheckboxes = checkboxes.length;
+    const totalMarcados = Array.from(checkboxes).filter(cb => cb.checked).length;
+    
+    checkboxTodas.checked = totalCheckboxes > 0 && totalMarcados === totalCheckboxes;
+    checkboxTodas.indeterminate = totalMarcados > 0 && totalMarcados < totalCheckboxes;
+  }
   
   window.salvarUsuario = async function(id) {
     try {
@@ -2291,9 +2775,9 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
         return dataPedido >= trintaDiasAtras;
       });
       
-      // Calcular totais
+      // Calcular totais (apenas pedidos aprovados)
       const totalVendas = pedidosRecentes
-        .filter(p => p.status !== 'CANCELADO')
+        .filter(p => p.status === 'APROVADO')
         .reduce((sum, p) => sum + Number(p.valor_total || 0), 0);
       
       const pedidosPendentes = todosPedidos.filter(p => 
@@ -2316,6 +2800,17 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
       }
       if (elemPedidosPendentes) elemPedidosPendentes.textContent = pedidosPendentes;
       
+      // Atualizar badge no botão de Pedidos
+      const badgePedidosPendentes = $('#badgePedidosPendentes');
+      if (badgePedidosPendentes) {
+        if (pedidosPendentes > 0) {
+          badgePedidosPendentes.textContent = pedidosPendentes;
+          badgePedidosPendentes.style.display = 'block';
+        } else {
+          badgePedidosPendentes.style.display = 'none';
+        }
+      }
+      
       // Renderizar tabela de limites
       const tbody = $('#tbodyDashboard');
       if (!tbody) {
@@ -2330,9 +2825,9 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
         const limiteUtilizado = limiteTotal - limiteDisponivel;
         const percUtilizado = limiteTotal > 0 ? (limiteUtilizado / limiteTotal) * 100 : 0;
         
-        // Calcular compras da equipe nos últimos 30 dias
+        // Calcular compras da equipe nos últimos 30 dias (apenas pedidos aprovados)
         const pedidosEquipe = pedidosRecentes.filter(p => 
-          p.equipe_id === equipe.id && p.status !== 'CANCELADO'
+          p.equipe_id === equipe.id && p.status === 'APROVADO'
         );
         const compras30d = pedidosEquipe.reduce((sum, p) => sum + Number(p.valor_total || 0), 0);
         const ticketMedio = pedidosEquipe.length > 0 ? compras30d / pedidosEquipe.length : 0;
@@ -2500,9 +2995,12 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
             <div><strong>Equipe:</strong> ${pedido.equipe_nome}</div>
             <div><strong>Status:</strong> <span class="status-badge status-${pedido.status}">${getStatusLabel(pedido.status)}</span></div>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
             <div><strong>📋 Código ERP:</strong> ${pedido.codigo_erp || '<span style="color: #9ca3af;">Não informado</span>'}</div>
             <div><strong>🏢 CGC/CNPJ:</strong> ${pedido.cgc || '<span style="color: #9ca3af;">Não informado</span>'}</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+            <div><strong>👤 Solicitante:</strong> ${pedido.usuario_nome || '<span style="color: #9ca3af;">Não informado</span>'} ${pedido.usuario_email ? `<span style="color: #6b7280;">(${pedido.usuario_email})</span>` : ''}</div>
           </div>
         </div>
         
@@ -3161,22 +3659,22 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
         
         // Se perfil for "solicitante", torna o campo obrigatório
         if (perfil === 'solicitante') {
-          equipeSelect.required = true;
-          equipeObrigatorio.style.display = 'inline';
+          if (equipeSelect) equipeSelect.required = true;
+          if (equipeObrigatorio) equipeObrigatorio.style.display = 'inline';
           // Mostrar categoria de acesso
           if (grupoCategoriaAcesso) {
             console.log('✅ Mostrando campo categoria de acesso');
             grupoCategoriaAcesso.style.display = 'block';
-            categoriaAcessoSelect.required = true;
+            if (categoriaAcessoSelect) categoriaAcessoSelect.required = true;
           }
         } else {
           console.log('❌ Escondendo campo categoria de acesso');
-          equipeSelect.required = false;
-          equipeObrigatorio.style.display = 'none';
+          if (equipeSelect) equipeSelect.required = false;
+          if (equipeObrigatorio) equipeObrigatorio.style.display = 'none';
           // Esconder categoria de acesso
           if (grupoCategoriaAcesso) {
             grupoCategoriaAcesso.style.display = 'none';
-            categoriaAcessoSelect.required = false;
+            if (categoriaAcessoSelect) categoriaAcessoSelect.required = false;
           }
         }
       });
@@ -3271,13 +3769,32 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
   document.addEventListener('DOMContentLoaded', () => {
     ensureAuth();
     
+    // Função para obter saudação baseada no horário
+    function obterSaudacao() {
+      const hora = new Date().getHours();
+      if (hora >= 5 && hora < 12) {
+        return 'Bom dia';
+      } else if (hora >= 12 && hora < 18) {
+        return 'Boa tarde';
+      } else {
+        return 'Boa noite';
+      }
+    }
+    
     // Mostrar saudação do usuário e verificar perfil
     const token = getToken();
     const payload = parseJwt(token);
     if (payload) {
-      const greetingEl = $('#userGreeting');
-      if (greetingEl) {
-        greetingEl.textContent = `Olá, ${payload.nome}!`;
+      // Atualizar nome no dashboard
+      const greetingDashboard = $('#userGreetingDashboard');
+      if (greetingDashboard) {
+        greetingDashboard.textContent = payload.nome;
+      }
+      
+      // Atualizar saudação baseada no horário
+      const saudacaoHorario = $('#saudacaoHorario');
+      if (saudacaoHorario) {
+        saudacaoHorario.textContent = obterSaudacao();
       }
       
       // Carregar badge de equipes no cabeçalho
@@ -3288,13 +3805,13 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
       
       // Se o usuário for GESTOR (não admin), esconder abas de Produtos e Usuários
       if (payload.perfil === 'gestor') {
-        const tabProdutos = $('#tab-btn-produtos');
+        const tabProdutos = document.querySelector('#produtosTab');
         const contentProdutos = $('#tab-produtos');
         if (tabProdutos) tabProdutos.style.display = 'none';
         if (contentProdutos) contentProdutos.style.display = 'none';
         console.log('👤 Perfil GESTOR: Menu Produtos oculto');
         
-        const tabUsuarios = $('#tab-btn-usuarios');
+        const tabUsuarios = document.querySelector('#usuariosTab');
         const contentUsuarios = $('#tab-usuarios');
         if (tabUsuarios) tabUsuarios.style.display = 'none';
         if (contentUsuarios) contentUsuarios.style.display = 'none';
@@ -3314,12 +3831,27 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
           console.log('👤 Perfil GESTOR: Opção Admin oculta no cadastro de usuários');
         }
       }
+      
+      // Se for ADMIN, garantir que as abas de usuários e produtos estão visíveis
+      if (payload.perfil === 'admin') {
+        const tabUsuarios = document.querySelector('#usuariosTab');
+        const contentUsuarios = $('#tab-usuarios');
+        if (tabUsuarios) tabUsuarios.style.display = '';
+        if (contentUsuarios) contentUsuarios.style.display = '';
+        console.log('👤 Perfil ADMIN: Menu Usuários visível');
+        
+        const tabProdutos = document.querySelector('#produtosTab');
+        const contentProdutos = $('#tab-produtos');
+        if (tabProdutos) tabProdutos.style.display = '';
+        if (contentProdutos) contentProdutos.style.display = '';
+        console.log('👤 Perfil ADMIN: Menu Produtos visível');
+      }
     }
     
     initTabs();
     carregarEquipesParaSelects().then(() => {
       loadTabData('dashboard'); // Carregar dashboard inicial
-      carregarEquipesParaCheckboxes(); // Carregar equipes para seleção no form
+      // Função carregarEquipesParaCheckboxes não existe, já é feita em carregarEquipesParaSelects
       
       // Configurar listener após carregar equipes (garantir que DOM está pronto)
       setTimeout(() => {
@@ -3370,7 +3902,7 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
           const categoria_acesso = $('#novoCategoriaAcesso').value || null;
           
           // Obter equipes selecionadas via checkboxes
-          const checkboxes = document.querySelectorAll('#equipesCheckboxes input[type="checkbox"]:checked');
+          const checkboxes = document.querySelectorAll('#usuariosEquipesCheckboxes input[type="checkbox"]:checked');
           const equipes_ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
         
           // Validação: perfil "solicitante" requer pelo menos uma equipe
@@ -3403,7 +3935,7 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
           showMessage('Usuário criado com sucesso!');
           $('#formNovoUsuario').reset();
           // Limpar seleções de equipes
-          document.querySelectorAll('#equipesCheckboxes input[type="checkbox"]').forEach(cb => cb.checked = false);
+          document.querySelectorAll('#usuariosEquipesCheckboxes input[type="checkbox"]').forEach(cb => cb.checked = false);
           window.atualizarEquipesSelecionadas();
           // Esconder campo de categoria após reset
           const grupoCategoriaAcesso = $('#grupoCategoriaAcesso');

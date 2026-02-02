@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste de Carregamento de Equipes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button {
+      background: #0066cc;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #0052a3;
+    }
+    #result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border: 1px solid #dee2e6;
+    }
+    .equipe-checkbox-item {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+    }
+    .equipe-checkbox-item input {
+      margin-right: 10px;
+    }
+    .equipes-checkboxes {
+      min-height: 100px;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 10px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 Teste de Carregamento de Equipes</h1>
+    
+    <div>
+      <label for="token">Token JWT (copie do localStorage):</label>
+      <input type="text" id="token" style="width: 100%; padding: 8px; margin: 10px 0;" placeholder="Cole o token aqui">
+    </div>
+    
+    <button onclick="testarAPI()">Testar API /api/equipes</button>
+    <button onclick="obterToken()">Obter Token Automaticamente</button>
+    
+    <div id="result"></div>
+    
+    <h2>Checkboxes de Equipes:</h2>
+    <div id="equipesCheckboxes" class="equipes-checkboxes">
+      <p style="color: #999; text-align: center;">Clique em "Testar API" para carregar</p>
+    </div>
+  </div>
+
+  <script>
+    function obterToken() {
+      const token = localStorage.getItem('nexus_b2b_token');
+      if (token) {
+        document.getElementById('token').value = token;
+        document.getElementById('result').innerHTML = '<p style="color: green;">✅ Token obtido com sucesso!</p>';
+      } else {
+        document.getElementById('result').innerHTML = '<p style="color: red;">❌ Token não encontrado. Faça login primeiro.</p>';
+      }
+    }
+
+    async function testarAPI() {
+      const resultDiv = document.getElementById('result');
+      const checkboxesContainer = document.getElementById('equipesCheckboxes');
+      const token = document.getElementById('token').value;
+      
+      if (!token) {
+        resultDiv.innerHTML = '<p style="color: red;">❌ Por favor, insira o token primeiro ou clique em "Obter Token Automaticamente"</p>';
+        return;
+      }
+      
+      resultDiv.innerHTML = '<p>⏳ Carregando...</p>';
+      checkboxesContainer.innerHTML = '<p style="color: #999; text-align: center;">⏳ Carregando equipes...</p>';
+      
+      try {
+        console.log('🔄 Fazendo requisição para /api/equipes');
+        
+        const response = await fetch('/api/equipes', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('📡 Status da resposta:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('📦 Dados recebidos:', data);
+        
+        const equipes = data.equipes || [];
+        
+        // Exibir resultado
+        let html = `<h3>✅ Sucesso!</h3>`;
+        html += `<p><strong>Total de equipes:</strong> ${equipes.length}</p>`;
+        html += `<details><summary>Ver JSON completo</summary><pre>${JSON.stringify(data, null, 2)}</pre></details>`;
+        resultDiv.innerHTML = html;
+        
+        // Criar checkboxes
+        checkboxesContainer.innerHTML = '';
+        
+        if (equipes.length === 0) {
+          checkboxesContainer.innerHTML = '<p style="color: #ff9500; text-align: center;">⚠️ Nenhuma equipe encontrada</p>';
+        } else {
+          equipes.forEach(equipe => {
+            const div = document.createElement('div');
+            div.className = 'equipe-checkbox-item';
+            div.innerHTML = `
+              <input type="checkbox" id="equipe_${equipe.id}" value="${equipe.id}">
+              <label for="equipe_${equipe.id}">#${equipe.id} - ${equipe.nome} ${equipe.codigo_erp ? '(' + equipe.codigo_erp + ')' : ''}</label>
+            `;
+            checkboxesContainer.appendChild(div);
+          });
+          
+          console.log('✅ Checkboxes criados com sucesso!');
+        }
+        
+      } catch (error) {
+        console.error('❌ Erro:', error);
+        resultDiv.innerHTML = `<p style="color: red;">❌ Erro: ${error.message}</p>`;
+        checkboxesContainer.innerHTML = `<p style="color: red; text-align: center;">❌ Erro ao carregar equipes</p>`;
+      }
+    }
+    
+    // Tentar obter token automaticamente ao carregar
+    window.addEventListener('DOMContentLoaded', () => {
+      obterToken();
+    });
+  </script>
+</body>
+</html>

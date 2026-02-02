@@ -37,10 +37,28 @@ var app = {
       console.log('👤 Perfil do usuário:', this.userPerfil);
       console.log('🏢 Equipe ID:', this.equipeId);
       
-      // Exibir nome do usuário
-      var userGreeting = document.getElementById('userGreeting');
-      if (userGreeting && payload.nome) {
-        userGreeting.textContent = 'Olá, ' + payload.nome + '!';
+      // Função para obter saudação baseada no horário
+      function obterSaudacao() {
+        var hora = new Date().getHours();
+        if (hora >= 5 && hora < 12) {
+          return 'Bom dia';
+        } else if (hora >= 12 && hora < 18) {
+          return 'Boa tarde';
+        } else {
+          return 'Boa noite';
+        }
+      }
+      
+      // Exibir nome do usuário no novo local
+      var userGreetingPage = document.getElementById('userGreetingPage');
+      if (userGreetingPage && payload.nome) {
+        userGreetingPage.textContent = payload.nome;
+      }
+      
+      // Atualizar saudação baseada no horário
+      var saudacaoHorario = document.getElementById('saudacaoHorario');
+      if (saudacaoHorario) {
+        saudacaoHorario.textContent = obterSaudacao();
       }
       
       // Carregar e exibir badge de equipes
@@ -408,9 +426,11 @@ var app = {
   },
   
   renderProductCard: function(produto) {
-    var hasImage = produto.foto && produto.foto.trim();
+    // Priorizar foto_path (upload) sobre foto (URL)
+    var imagemUrl = produto.foto_path || produto.foto || '';
+    var hasImage = imagemUrl && imagemUrl.trim();
     var imageContent = hasImage 
-      ? '<img src="' + produto.foto + '" alt="' + produto.descricao + '" onclick="app.abrirDetalhesProduto(' + produto.id + ')" style="cursor: pointer;">'
+      ? '<img src="' + imagemUrl + '" alt="' + produto.descricao + '" onclick="app.abrirDetalhesProduto(' + produto.id + ')" style="cursor: pointer;">'
       : '<i class="fas fa-box-open"></i>';
     
     var multiplos = produto.multiplos || 1;
@@ -967,12 +987,20 @@ var app = {
     // Criar pedidos para TODAS as equipes selecionadas
     var promises = [];
     
+    // Gerar ID único do lote para vincular todos os pedidos criados juntos
+    var lotePedido = equipesParaPedido.length > 1 
+      ? 'LOTE-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9)
+      : null;
+    
+    console.log('🗂️ Lote de pedidos:', lotePedido || 'pedido individual');
+    
     for (var i = 0; i < equipesParaPedido.length; i++) {
       var equipe = equipesParaPedido[i];
       
       var pedidoData = {
         equipe_id: equipe.id,
-        itens: itens
+        itens: itens,
+        lote_pedido: lotePedido
       };
       
       console.log('📦 Enviando pedido para', equipe.nome, ':', pedidoData);
@@ -1007,18 +1035,8 @@ var app = {
         sessionStorage.removeItem('modalSelecaoExibido');
         console.log('🔄 SessionStorage limpo - modal poderá aparecer novamente no próximo acesso');
         
-        var mensagem = '✅ PEDIDOS ENVIADOS COM SUCESSO!\n\n';
-        mensagem += '📦 ' + resultados.length + ' pedido(s) criado(s) para:\n\n';
-        
-        for (var i = 0; i < equipesParaPedido.length; i++) {
-          mensagem += '• ' + equipesParaPedido[i].nome + '\n';
-        }
-        
-        mensagem += '\n📋 Seus pedidos estão AGUARDANDO APROVAÇÃO do gestor.\n';
-        mensagem += '💰 Seu crédito será debitado APENAS após aprovação.\n';
-        mensagem += '📧 O gestor foi notificado e irá analisar seus pedidos.';
-        
-        self.showSuccess(mensagem);
+        // Mostrar animação bonita centralizada
+        self.mostrarAnimacaoPedidoCriado(equipesParaPedido, valorTotal);
       })
       .catch(function(error) {
         console.error('❌ Erro ao criar pedidos:', error);
@@ -2242,6 +2260,70 @@ var app = {
     
     document.body.appendChild(toast);
     setTimeout(function() { toast.remove(); }, 4000);
+  },
+  
+  mostrarAnimacaoPedidoCriado: function(equipes, valorTotal) {
+    var self = this;
+    
+    // Criar overlay
+    var overlay = document.createElement('div');
+    overlay.className = 'success-animation-overlay';
+    
+    // Criar modal
+    var modal = document.createElement('div');
+    modal.className = 'success-animation-modal';
+    
+    // Ícone de check animado
+    var icon = document.createElement('div');
+    icon.className = 'success-check-icon';
+    icon.innerHTML = '<i class="fas fa-check-circle"></i>';
+    
+    // Título
+    var title = document.createElement('h2');
+    title.className = 'success-title';
+    title.textContent = equipes.length === 1 ? 'Pedido Enviado!' : 'Pedidos Enviados!';
+    
+    // Lista de equipes
+    var equipesContainer = document.createElement('div');
+    equipesContainer.className = 'success-equipes-list';
+    
+    var equipesHtml = '<p class="success-subtitle">' + equipes.length + ' pedido(s) criado(s) para:</p><ul>';
+    for (var i = 0; i < equipes.length; i++) {
+      equipesHtml += '<li><i class="fas fa-store"></i> ' + equipes[i].nome + '</li>';
+    }
+    equipesHtml += '</ul>';
+    
+    // Valor total
+    var valorFormatado = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(valorTotal).replace(/\u00A0/g, ' ');
+    
+    equipesHtml += '<p class="success-total">Valor total: <strong>' + valorFormatado + '</strong></p>';
+    
+    equipesHtml += '<p class="success-info">Aguardando aprovação do gestor<br>Crédito será debitado apenas após aprovação</p>';
+    
+    equipesContainer.innerHTML = equipesHtml;
+    
+    // Montar modal
+    modal.appendChild(icon);
+    modal.appendChild(title);
+    modal.appendChild(equipesContainer);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Animar entrada
+    setTimeout(function() {
+      overlay.classList.add('show');
+    }, 10);
+    
+    // Remover após 4 segundos
+    setTimeout(function() {
+      overlay.classList.remove('show');
+      setTimeout(function() {
+        overlay.remove();
+      }, 300);
+    }, 4000);
   }
 };
 

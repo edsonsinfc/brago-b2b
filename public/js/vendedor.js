@@ -76,6 +76,92 @@ function logout() {
     window.location.href = '/login.html';
 }
 
+// Toggle pedido card (mobile)
+async function togglePedidoCard(card, pedidoId) {
+    const isExpanded = card.classList.contains('expanded');
+    
+    // Fechar todos os outros cards
+    document.querySelectorAll('.pedido-card.expanded').forEach(c => {
+        if (c !== card) {
+            c.classList.remove('expanded');
+        }
+    });
+    
+    // Se estava expandido, apenas fecha
+    if (isExpanded) {
+        card.classList.remove('expanded');
+        return;
+    }
+    
+    // Expandir e carregar detalhes
+    card.classList.add('expanded');
+    
+    // Verificar se já carregou os detalhes
+    const detailsContainer = card.querySelector('.pedido-card-details');
+    if (detailsContainer.dataset.loaded === 'true') {
+        return;
+    }
+    
+    // Mostrar loading
+    const loadingDiv = detailsContainer.querySelector('.loading-detalhes');
+    if (loadingDiv) loadingDiv.style.display = 'block';
+    
+    try {
+        // Buscar detalhes do pedido
+        const data = await fetchAPI(`/api/vendedor/pedido/${pedidoId}`);
+        if (!data) {
+            detailsContainer.innerHTML = '<p style="color: var(--danger); padding: 16px; text-align: center;">Erro ao carregar detalhes</p>';
+            return;
+        }
+        
+        // Renderizar detalhes completos
+        const itensHTML = data.itens.map(item => `
+            <div class="item-row">
+                <div class="item-info">
+                    <div class="item-nome">${item.descricao}</div>
+                    <div class="item-quantidade">${item.quantidade}x ${formatMoney(item.valor_unitario)}</div>
+                </div>
+                <div class="item-total">${formatMoney(item.valor_unitario * item.quantidade)}</div>
+            </div>
+        `).join('');
+        
+        detailsContainer.innerHTML = `
+            <div class="detail-row">
+                <span class="detail-label"><i class="fas fa-calendar"></i> Data:</span>
+                <span class="detail-value">${formatDate(data.pedido.data)}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label"><i class="fas fa-barcode"></i> ERP:</span>
+                <span class="detail-value">${data.pedido.codigo_erp || 'Não sincronizado'}</span>
+            </div>
+            ${data.pedido.observacoes ? `
+            <div class="detail-row">
+                <span class="detail-label"><i class="fas fa-comment"></i> Obs:</span>
+                <span class="detail-value">${data.pedido.observacoes}</span>
+            </div>
+            ` : ''}
+            
+            <div class="detail-section">
+                <h4 class="section-title"><i class="fas fa-box"></i> Itens do Pedido (${data.itens.length})</h4>
+                <div class="itens-lista">
+                    ${itensHTML}
+                </div>
+            </div>
+            
+            <div class="detail-row total-row">
+                <span class="detail-label"><strong>TOTAL:</strong></span>
+                <span class="detail-value total-value">${formatMoney(data.pedido.valor_total)}</span>
+            </div>
+        `;
+        
+        detailsContainer.dataset.loaded = 'true';
+        
+    } catch (error) {
+        console.error('Erro ao carregar detalhes:', error);
+        detailsContainer.innerHTML = '<p style="color: var(--danger); padding: 16px; text-align: center;">Erro ao carregar detalhes</p>';
+    }
+}
+
 // Fazer requisição autenticada
 async function fetchAPI(endpoint) {
     try {
@@ -110,7 +196,7 @@ async function carregarKPIs() {
     
     const statsGrid = document.getElementById('statsGrid');
     statsGrid.innerHTML = `
-        <div class="stat-card primary">
+        <div class="stat-card primary" onclick="switchView('pedidos')" style="cursor: pointer;">
             <div class="stat-header">
                 <div>
                     <div class="stat-label">Total de Pedidos</div>
@@ -125,7 +211,7 @@ async function carregarKPIs() {
             </div>
         </div>
 
-        <div class="stat-card success">
+        <div class="stat-card success" style="cursor: default;">
             <div class="stat-header">
                 <div>
                     <div class="stat-label">Valor Total Vendido</div>
@@ -140,7 +226,7 @@ async function carregarKPIs() {
             </div>
         </div>
 
-        <div class="stat-card warning">
+        <div class="stat-card warning" onclick="switchView('pedidos'); setTimeout(() => { document.getElementById('filterStatus').value = 'PENDENTE_APROVACAO'; carregarTodosPedidos(1); }, 100);" style="cursor: pointer;">
             <div class="stat-header">
                 <div>
                     <div class="stat-label">Pedidos Pendentes</div>
@@ -155,7 +241,7 @@ async function carregarKPIs() {
             </div>
         </div>
 
-        <div class="stat-card secondary">
+        <div class="stat-card secondary" onclick="switchView('lojas')" style="cursor: pointer;">
             <div class="stat-header">
                 <div>
                     <div class="stat-label">Total de Lojas</div>
@@ -170,7 +256,7 @@ async function carregarKPIs() {
             </div>
         </div>
 
-        <div class="stat-card primary">
+        <div class="stat-card primary" style="cursor: default;">
             <div class="stat-header">
                 <div>
                     <div class="stat-label">Ticket Médio</div>
@@ -185,7 +271,7 @@ async function carregarKPIs() {
             </div>
         </div>
 
-        <div class="stat-card success">
+        <div class="stat-card success" style="cursor: default;">
             <div class="stat-header">
                 <div>
                     <div class="stat-label">Vendas do Mês</div>
@@ -398,7 +484,8 @@ async function carregarTodosPedidos(page = 1) {
     }
     
     container.innerHTML = `
-        <table class="data-table">
+        <!-- Tabela Desktop -->
+        <table class="data-table desktop-only">
             <thead>
                 <tr>
                     <th>Pedido</th>
@@ -428,6 +515,32 @@ async function carregarTodosPedidos(page = 1) {
                 `).join('')}
             </tbody>
         </table>
+        
+        <!-- Cards Mobile -->
+        <div class="pedidos-cards mobile-only">
+            ${filteredPedidos.map(pedido => `
+                <div class="pedido-card" onclick="togglePedidoCard(this, ${pedido.id})">
+                    <div class="pedido-card-header">
+                        <div class="pedido-card-title">
+                            <strong>#${pedido.id}</strong>
+                            <span class="status-badge ${statusClasses[pedido.status]}">${pedido.status.replace('_', ' ')}</span>
+                        </div>
+                        <div class="pedido-card-subtitle">
+                            <i class="fas fa-store"></i> ${pedido.equipe_nome}
+                        </div>
+                        <div class="pedido-card-value">
+                            ${formatMoney(pedido.valor_total)}
+                        </div>
+                        <i class="fas fa-chevron-down pedido-card-arrow"></i>
+                    </div>
+                    <div class="pedido-card-details">
+                        <div class="loading-detalhes" style="display: block; text-align: center; padding: 16px;">
+                            <i class="fas fa-spinner fa-spin"></i> Carregando detalhes...
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
     `;
     
     renderizarPaginacao(data.pagination);
