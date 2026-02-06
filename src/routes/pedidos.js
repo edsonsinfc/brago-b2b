@@ -90,6 +90,56 @@ router.post('/', requireRole('admin', 'gestor', 'solicitante'), async (req, res)
       console.log('✅ Usuário tem permissão para a equipe:', equipe_id);
     }
 
+    // ===== VALIDAÇÃO DE CATEGORIA DE ACESSO =====
+    // Verificar se o usuário (solicitante) tem permissão para pedir cada produto
+    // com base na sua categoria_acesso (facility, manipulacao ou ambas)
+    if (req.user && req.user.categoria_acesso && req.user.categoria_acesso !== 'ambas') {
+      console.log('🔍 Validando categoria de acesso do usuário:', req.user.categoria_acesso);
+      
+      const codprods = itens.map(i => i.codprod);
+      const placeholders = codprods.map(() => '?').join(',');
+      
+      const [produtosInfo] = await conn.execute(
+        `SELECT codprod, descricao, categoria_facility, categoria_manipulacao FROM produtos WHERE codprod IN (${placeholders})`,
+        codprods
+      );
+      
+      const produtosMap = {};
+      for (const p of produtosInfo) {
+        produtosMap[p.codprod] = p;
+      }
+      
+      const produtosNaoPermitidos = [];
+      for (const item of itens) {
+        const prod = produtosMap[item.codprod];
+        if (!prod) continue; // produto não encontrado, deixar a validação de existência para depois
+        
+        if (req.user.categoria_acesso === 'facility') {
+          // Usuário facility: pode pedir facility=1 ou ambos(facility=1 e manipulacao=1)
+          // NÃO pode pedir produtos APENAS de manipulação (facility=0, manipulacao=1)
+          if (prod.categoria_manipulacao === 1 && prod.categoria_facility !== 1) {
+            produtosNaoPermitidos.push(prod.descricao || item.codprod);
+          }
+        } else if (req.user.categoria_acesso === 'manipulacao') {
+          // Usuário manipulação: pode pedir manipulacao=1 ou ambos
+          // NÃO pode pedir produtos APENAS de facility (facility=1, manipulacao=0)
+          if (prod.categoria_facility === 1 && prod.categoria_manipulacao !== 1) {
+            produtosNaoPermitidos.push(prod.descricao || item.codprod);
+          }
+        }
+      }
+      
+      if (produtosNaoPermitidos.length > 0) {
+        console.log('❌ Produtos não permitidos para a categoria do usuário:', produtosNaoPermitidos);
+        await conn.rollback();
+        return res.status(400).json({ 
+          error: `Os seguintes produtos não estão disponíveis para o seu perfil de acesso (${req.user.categoria_acesso}): ${produtosNaoPermitidos.join(', ')}. Remova-os do carrinho para continuar.`
+        });
+      }
+      
+      console.log('✅ Todos os produtos são permitidos para a categoria:', req.user.categoria_acesso);
+    }
+
     // Buscar informações da equipe incluindo limites, codigo_erp e cgc
     const [[eq]] = await conn.execute(
       'SELECT id, limite_total, saldo_atual, limite_credito, limite_disponivel, vendedor_email, nome, codigo_erp, cgc FROM equipes WHERE id = ? FOR UPDATE', 

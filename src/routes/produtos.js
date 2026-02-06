@@ -229,12 +229,14 @@ router.get('/', async (req, res) => {
       
       // Produtos disponíveis:
       // 1. Produtos OBA (cont_oba = 'S') com categoria correta
-      // 2. Produtos com acesso_especifico = 0 (todos)
+      // 2. Produtos com acesso_especifico = 0 com categoria correta
       // 3. Produtos com acesso_especifico = 1 vinculados às equipes do usuário
+      // IMPORTANTE: O filtro de categoria deve ser aplicado em TODAS as condições,
+      // não apenas nos produtos OBA, para evitar que produtos de outra categoria
+      // sejam exibidos via acesso_especifico = 0
       if (categoriaFilter) {
         whereClause += ` AND (
-          (p.cont_oba = 'S' AND ${categoriaFilter})
-          OR p.acesso_especifico = 0
+          (${categoriaFilter})
           OR (p.acesso_especifico = 1 AND pe.equipe_id IN (${equipesIds.length > 0 ? equipesIds.join(',') : '0'}))
         )`;
       } else {
