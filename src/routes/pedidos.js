@@ -396,13 +396,13 @@ router.get('/', requireRole('admin', 'gestor', 'solicitante'), async (req, res) 
   const whereSql = where.length ? ('WHERE ' + where.join(' AND ')) : '';
 
   const [[{ total }]] = await pool.execute(
-    `SELECT COUNT(*) AS total FROM pedidos p JOIN equipes e ON e.id = p.equipe_id ${whereSql}`,
+    `SELECT COUNT(*) AS total FROM pedidos p JOIN equipes e ON e.id = p.equipe_id LEFT JOIN usuarios u ON u.id = p.criado_por ${whereSql}`,
     vals
   );
   
   const offset = (page - 1) * pageSize;
   const [rows] = await pool.execute(
-    `SELECT p.*, e.nome AS equipe_nome, e.codigo_erp, e.cgc FROM pedidos p JOIN equipes e ON e.id = p.equipe_id ${whereSql} ORDER BY p.data DESC LIMIT ${pageSize} OFFSET ${offset}`,
+    `SELECT p.*, e.nome AS equipe_nome, e.codigo_erp, e.cgc, u.categoria_acesso AS solicitante_categoria FROM pedidos p JOIN equipes e ON e.id = p.equipe_id LEFT JOIN usuarios u ON u.id = p.criado_por ${whereSql} ORDER BY p.data DESC LIMIT ${pageSize} OFFSET ${offset}`,
     vals
   );
   

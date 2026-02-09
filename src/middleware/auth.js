@@ -11,7 +11,7 @@ async function authenticate(req, res, next) {
     
     // VALIDAÇÃO 1: Verificar se o usuário foi atualizado após a criação do token
     const [rows] = await pool.execute(
-      'SELECT updated_at, categoria_acesso, perfil, equipe_id FROM usuarios WHERE id = ? LIMIT 1',
+      'SELECT updated_at, categoria_acesso, perfil, equipe_id, pode_editar_equipes FROM usuarios WHERE id = ? LIMIT 1',
       [payload.id]
     );
     
@@ -24,6 +24,10 @@ async function authenticate(req, res, next) {
     }
     
     const usuario = rows[0];
+    
+    // Adicionar pode_editar_equipes ao req.user para uso em outras rotas
+    req.user.pode_editar_equipes = Boolean(usuario.pode_editar_equipes);
+    
     const tokenCreatedAt = payload.iat * 1000; // Converter de segundos para milissegundos
     const userUpdatedAt = new Date(usuario.updated_at).getTime();
     

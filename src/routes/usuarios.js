@@ -11,7 +11,7 @@ router.get('/me', authenticate, async (req, res) => {
     const userId = req.user.id;
     
     const [usuarios] = await pool.execute(
-      'SELECT id, nome, email, perfil, ativo, equipe_id, categoria_acesso, recebe_email_notificacao FROM usuarios WHERE id = ?',
+      'SELECT id, nome, email, perfil, ativo, equipe_id, categoria_acesso, recebe_email_notificacao, pode_editar_equipes FROM usuarios WHERE id = ?',
       [userId]
     );
     
@@ -122,7 +122,7 @@ router.get('/', async (req, res) => {
 
     const offset = (page - 1) * pageSize;
     const [rows] = await pool.execute(
-      `SELECT u.id, u.nome, u.email, u.perfil, u.ativo, u.equipe_id, u.categoria_acesso, u.recebe_email_notificacao
+      `SELECT u.id, u.nome, u.email, u.perfil, u.ativo, u.equipe_id, u.categoria_acesso, u.recebe_email_notificacao, u.pode_editar_equipes
          FROM usuarios u
          ${whereSql}
          ORDER BY u.nome
@@ -135,6 +135,7 @@ router.get('/', async (req, res) => {
       // Converter tinyint para boolean
       usuario.ativo = Boolean(usuario.ativo);
       usuario.recebe_email_notificacao = Boolean(usuario.recebe_email_notificacao);
+      usuario.pode_editar_equipes = Boolean(usuario.pode_editar_equipes);
       
       const [equipes] = await pool.execute(
         `SELECT e.id, e.nome 
@@ -159,7 +160,7 @@ router.get('/', async (req, res) => {
 // Criar usuário
 router.post('/', async (req, res) => {
   try {
-    const { nome, email, senha, perfil, ativo = 1, equipes_ids = null, categoria_acesso = null, recebe_email_notificacao = false } = req.body || {};
+    const { nome, email, senha, perfil, ativo = 1, equipes_ids = null, categoria_acesso = null, recebe_email_notificacao = false, pode_editar_equipes = false } = req.body || {};
     
     // Validação de campos obrigatórios
     if (!nome || !email || !senha || !perfil) {
@@ -174,6 +175,11 @@ router.post('/', async (req, res) => {
     // Gestor não pode criar Admin
     if (req.user.perfil === 'gestor' && perfil === 'admin') {
       return res.status(403).json({ error: 'Gestores não podem criar administradores' });
+    }
+    
+    // Apenas Admin pode criar Gestores
+    if (req.user.perfil !== 'admin' && perfil === 'gestor') {
+      return res.status(403).json({ error: 'Apenas administradores podem criar gestores' });
     }
     
     // Perfil "solicitante" requer pelo menos uma equipe
@@ -200,8 +206,8 @@ router.post('/', async (req, res) => {
     
     // Criar usuário (mantém equipe_id como null por padrão para compatibilidade)
     const [r] = await pool.execute(
-      'INSERT INTO usuarios (nome, email, senha, perfil, ativo, equipe_id, categoria_acesso, recebe_email_notificacao) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [nome, email, senhaHash, perfil, (ativo ? 1 : 0), null, categoria_acesso, recebe_email_notificacao ? 1 : 0]
+      'INSERT INTO usuarios (nome, email, senha, perfil, ativo, equipe_id, categoria_acesso, recebe_email_notificacao, pode_editar_equipes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [nome, email, senhaHash, perfil, (ativo ? 1 : 0), null, categoria_acesso, recebe_email_notificacao ? 1 : 0, pode_editar_equipes ? 1 : 0]
     );
     
     const usuarioId = r.insertId;
@@ -222,7 +228,7 @@ router.post('/', async (req, res) => {
       );
     }
     
-    const [novo] = await pool.execute('SELECT id, nome, email, perfil, ativo, equipe_id, recebe_email_notificacao FROM usuarios WHERE id = ?', [usuarioId]);
+    const [novo] = await pool.execute('SELECT id, nome, email, perfil, ativo, equipe_id, recebe_email_notificacao, pode_editar_equipes FROM usuarios WHERE id = ?', [usuarioId]);
     
     // Converter tinyint para boolean
     if (novo[0]) {
@@ -255,19 +261,33 @@ router.post('/', async (req, res) => {
 router.patch('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { nome, email, perfil, ativo, equipes_ids, senha, categoria_acesso, recebe_email_notificacao } = req.body || {};
+    const { nome, email, perfil, ativo, equipes_ids, senha, categoria_acesso, recebe_email_notificacao, pode_editar_equipes } = req.body || {};
 
     const sets = [];
     const vals = [];
     if (nome !== undefined) { sets.push('nome = ?'); vals.push(nome); }
     if (email !== undefined) { sets.push('email = ?'); vals.push(email); }
     if (perfil !== undefined) {
-      if (!['gestor','solicitante','vendedor'].includes(perfil)) return res.status(400).json({ error: 'Perfil inválido' });
+      if (!['admin','gestor','solicitante','vendedor'].includes(perfil)) return res.status(400).json({ error: 'Perfil inválido' });
+      
+      // Apenas admin pode alterar perfil para gestor ou admin
+      if ((perfil === 'gestor' || perfil === 'admin') && req.user.perfil !== 'admin') {
+        return res.status(403).json({ error: 'Apenas administradores podem criar ou editar gestores e administradores' });
+      }
+      
       sets.push('perfil = ?'); vals.push(perfil);
     }
     if (ativo !== undefined) { sets.push('ativo = ?'); vals.push(ativo ? 1 : 0); }
     if (categoria_acesso !== undefined) { sets.push('categoria_acesso = ?'); vals.push(categoria_acesso); }
     if (recebe_email_notificacao !== undefined) { sets.push('recebe_email_notificacao = ?'); vals.push(recebe_email_notificacao ? 1 : 0); }
+    
+    // Apenas admin pode alterar permissão de editar equipes
+    if (pode_editar_equipes !== undefined) {
+      if (req.user.perfil !== 'admin') {
+        return res.status(403).json({ error: 'Apenas administradores podem alterar permissões de edição de equipes' });
+      }
+      sets.push('pode_editar_equipes = ?'); vals.push(pode_editar_equipes ? 1 : 0);
+    }
 
     if (senha !== undefined && senha !== null && senha !== '') {
       const senhaHash = await bcrypt.hash(String(senha), parseInt(process.env.BCRYPT_ROUNDS || '10', 10));
@@ -320,7 +340,7 @@ router.patch('/:id', async (req, res) => {
       }
     }
 
-    const [novo] = await pool.execute('SELECT id, nome, email, perfil, ativo, equipe_id, recebe_email_notificacao FROM usuarios WHERE id = ?', [id]);
+    const [novo] = await pool.execute('SELECT id, nome, email, perfil, ativo, equipe_id, recebe_email_notificacao, pode_editar_equipes FROM usuarios WHERE id = ?', [id]);
     
     // Converter tinyint para boolean
     if (novo[0]) {

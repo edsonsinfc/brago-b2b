@@ -1275,6 +1275,284 @@
       font-weight: 600;
     }
 
+    /* Estilos para o filtro de solicitantes em pedidos */
+    #solicitantesChecklistPedidos {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .solicitante-filtro-item {
+      display: flex;
+      align-items: center;
+      padding: 0.6rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      background: white;
+      margin-bottom: 0.25rem;
+    }
+
+    .solicitante-filtro-item:hover {
+      background-color: #d1fae5;
+      border-color: #10b981;
+    }
+
+    .solicitante-filtro-item input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin-right: 0.75rem;
+      cursor: pointer;
+      accent-color: #10b981;
+      flex-shrink: 0;
+    }
+
+    .solicitante-filtro-item label {
+      cursor: pointer;
+      user-select: none;
+      flex: 1;
+      font-size: 0.875rem;
+      color: var(--gray-800);
+    }
+
+    /* === NOVOS ESTILOS: FILTROS COMPACTOS === */
+    .filters-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-pill-wrapper {
+      position: relative;
+    }
+
+    .filter-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1rem;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .filter-pill:hover {
+      background: #e5e7eb;
+      border-color: #d1d5db;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-pill.active {
+      background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+      border-color: #0066cc;
+      color: white;
+    }
+
+    .filter-pill i:first-child {
+      font-size: 0.875rem;
+    }
+
+    .filter-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      background: #ef4444;
+      color: white;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .filter-pill.active .filter-badge {
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+    }
+
+    .filter-badge:empty {
+      display: none;
+    }
+
+    .filter-arrow {
+      font-size: 0.75rem;
+      transition: transform 0.3s;
+    }
+
+    .filter-pill.active .filter-arrow {
+      transform: rotate(180deg);
+    }
+
+    .filter-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      min-width: 320px;
+      max-width: 400px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      animation: dropdownFadeIn 0.2s ease;
+    }
+
+    @keyframes dropdownFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .filter-dropdown-header {
+      padding: 1rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .filter-search {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+    }
+
+    .filter-search:focus {
+      outline: none;
+      border-color: #0066cc;
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+
+    .filter-dropdown-body {
+      padding: 0.75rem;
+    }
+
+    .filter-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .filter-action-btn {
+      flex: 1;
+      padding: 0.5rem;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-action-btn:hover {
+      background: #e5e7eb;
+      border-color: #d1d5db;
+    }
+
+    .filter-action-btn i {
+      margin-right: 0.25rem;
+    }
+
+    .filter-checklist {
+      max-height: 280px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .filter-checklist::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .filter-checklist::-webkit-scrollbar-track {
+      background: #f3f4f6;
+      border-radius: 3px;
+    }
+
+    .filter-checklist::-webkit-scrollbar-thumb {
+      background: #d1d5db;
+      border-radius: 3px;
+    }
+
+    .filter-checklist::-webkit-scrollbar-thumb:hover {
+      background: #9ca3af;
+    }
+
+    .filter-clear-all {
+      margin-left: auto;
+      padding: 0.6rem 1rem;
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #dc2626;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-clear-all:hover {
+      background: #fecaca;
+      border-color: #fca5a5;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+    }
+
+    .filter-clear-all i {
+      margin-right: 0.5rem;
+    }
+    
+    .filter-status-item:hover {
+      background: #f3f4f6;
+    }
+    
+    .filter-status-item input[type="radio"] {
+      accent-color: #0066cc;
+    }
+
+    .filter-item-category {
+      display: inline-block;
+      margin-left: 0.5rem;
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+
+    .solicitante-info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .solicitante-nome {
+      font-weight: 500;
+      color: var(--gray-900);
+    }
+
+    .solicitante-equipe {
+      font-size: 0.85rem;
+      color: var(--gray-600);
+      margin-top: 0.15rem;
+    }
+
     /* Estilos para Cards de Usuários */
     .usuario-card {
       background: white;
@@ -2193,6 +2471,49 @@
       color: #166534;
     }
 
+    /* Badges de Categoria do Solicitante */
+    .categoria-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+      white-space: nowrap;
+    }
+
+    .categoria-badge i {
+      font-size: 0.7rem;
+    }
+
+    .categoria-badge.facility {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+
+    .categoria-badge.manipulacao {
+      background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+      color: white;
+      box-shadow: 0 2px 4px rgba(219, 39, 119, 0.2);
+    }
+
+    .categoria-badge.ambas {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      color: white;
+      box-shadow: 0 2px 4px rgba(124, 58, 237, 0.2);
+    }
+
+    .pedido-card.pendente .categoria-badge {
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
     .pedido-actions {
       display: flex;
       gap: 0.75rem;
@@ -2985,63 +3306,152 @@
 
     <!-- Tab Pedidos -->
     <div class="tab-content" id="tab-pedidos">
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title">
-            <i class="fas fa-filter"></i>
-            Filtros
-          </h3>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Status</label>
-            <select class="form-input" id="selFiltroStatus">
-              <option value="" selected>TODOS</option>
-              <option value="PENDENTE_APROVACAO">PENDENTE APROVAÇÃO</option>
-              <option value="APROVADO">APROVADO</option>
-              <option value="AGUARDANDO">AGUARDANDO</option>
-              <option value="EM_SEPARACAO">EM SEPARAÇÃO</option>
-              <option value="EM_TRANSPORTE">EM TRANSPORTE</option>
-              <option value="SAIU_ENTREGA">SAIU PARA ENTREGA</option>
-              <option value="ENTREGUE">ENTREGUE</option>
-              <option value="CANCELADO">CANCELADO</option>
-            </select>
-          </div>
-          <button class="btn btn-primary" onclick="carregarPedidos()">
-            <i class="fas fa-search"></i>
-            Filtrar
+      <!-- Barra de Filtros Compacta -->
+      <div class="filters-bar" id="filtrosAvancadosPedidos" style="display: none;">
+        <!-- Filtro de Status -->
+        <div class="filter-pill-wrapper">
+          <button class="filter-pill" id="btnFiltroStatus" onclick="toggleDropdownFiltro('status')">
+            <i class="fas fa-flag"></i>
+            <span>Status</span>
+            <span class="filter-badge" id="badgeStatus"></span>
+            <i class="fas fa-chevron-down filter-arrow"></i>
           </button>
-        </div>
-      </div>
-
-      <!-- Filtro de Equipes (apenas para gestores) -->
-      <div class="card" id="filtroEquipesPedidos" style="display: none;">
-        <div class="card-header" style="background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%); color: white; border: none; padding: 1.5rem; border-radius: 12px; margin-bottom: 0;">
-          <div>
-            <h3 class="card-title" style="color: white; margin: 0;">
-              <i class="fas fa-store"></i>
-              Filtrar por Equipe
-            </h3>
-            <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.25rem; color: white;">
-              <span id="equipesFiltradasCount">0 equipes selecionadas</span>
+          <div class="filter-dropdown" id="dropdownStatus" style="display: none;">
+            <div class="filter-dropdown-body" style="padding: 0.5rem;">
+              <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                <label class="filter-status-item" style="display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+                  <input type="radio" name="filtroStatus" value="" checked onchange="atualizarFiltroStatus()" style="margin-right: 0.5rem;">
+                  <span style="font-size: 0.875rem;">📋 Todos</span>
+                </label>
+                <label class="filter-status-item" style="display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+                  <input type="radio" name="filtroStatus" value="PENDENTE_APROVACAO" onchange="atualizarFiltroStatus()" style="margin-right: 0.5rem;">
+                  <span style="font-size: 0.875rem;">⏳ Pendente Aprovação</span>
+                </label>
+                <label class="filter-status-item" style="display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+                  <input type="radio" name="filtroStatus" value="APROVADO" onchange="atualizarFiltroStatus()" style="margin-right: 0.5rem;">
+                  <span style="font-size: 0.875rem;">✅ Aprovado</span>
+                </label>
+                <label class="filter-status-item" style="display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+                  <input type="radio" name="filtroStatus" value="AGUARDANDO" onchange="atualizarFiltroStatus()" style="margin-right: 0.5rem;">
+                  <span style="font-size: 0.875rem;">⏱️ Aguardando</span>
+                </label>
+                <label class="filter-status-item" style="display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+                  <input type="radio" name="filtroStatus" value="EM_SEPARACAO" onchange="atualizarFiltroStatus()" style="margin-right: 0.5rem;">
+                  <span style="font-size: 0.875rem;">📦 Em Separação</span>
+                </label>
+                <label class="filter-status-item" style="display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+                  <input type="radio" name="filtroStatus" value="EM_TRANSPORTE" onchange="atualizarFiltroStatus()" style="margin-right: 0.5rem;">
+                  <span style="font-size: 0.875rem;">🚚 Em Transporte</span>
+                </label>
+                <label class="filter-status-item" style="display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+                  <input type="radio" name="filtroStatus" value="SAIU_ENTREGA" onchange="atualizarFiltroStatus()" style="margin-right: 0.5rem;">
+                  <span style="font-size: 0.875rem;">🚛 Saiu para Entrega</span>
+                </label>
+                <label class="filter-status-item" style="display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+                  <input type="radio" name="filtroStatus" value="ENTREGUE" onchange="atualizarFiltroStatus()" style="margin-right: 0.5rem;">
+                  <span style="font-size: 0.875rem;">✔️ Entregue</span>
+                </label>
+                <label class="filter-status-item" style="display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+                  <input type="radio" name="filtroStatus" value="CANCELADO" onchange="atualizarFiltroStatus()" style="margin-right: 0.5rem;">
+                  <span style="font-size: 0.875rem;">❌ Cancelado</span>
+                </label>
+              </div>
             </div>
           </div>
         </div>
-        <div style="padding: 1.5rem;">
-          <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-            <button class="btn btn-secondary btn-sm" onclick="selecionarTodasEquipesFiltro()" style="flex: 1;">
-              <i class="fas fa-check-double"></i>
-              Selecionar Todas
-            </button>
-            <button class="btn btn-secondary btn-sm" onclick="limparEquipesFiltro()" style="flex: 1;">
-              <i class="fas fa-times"></i>
-              Limpar
-            </button>
-          </div>
-          <div id="equipesChecklistPedidos" style="max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb;">
-            <!-- Checkboxes serão carregados via JS -->
+        <!-- Filtro de Equipes -->
+        <div class="filter-pill-wrapper">
+          <button class="filter-pill" id="btnFiltroEquipes" onclick="toggleDropdownFiltro('equipes')">
+            <i class="fas fa-store"></i>
+            <span>Equipes</span>
+            <span class="filter-badge" id="badgeEquipes">0</span>
+            <i class="fas fa-chevron-down filter-arrow"></i>
+          </button>
+          <div class="filter-dropdown" id="dropdownEquipes" style="display: none;">
+            <div class="filter-dropdown-header">
+              <input type="text" class="filter-search" id="searchEquipes" placeholder="Buscar equipe..." oninput="filtrarListaEquipes()">
+            </div>
+            <div class="filter-dropdown-body">
+              <div class="filter-actions">
+                <button class="filter-action-btn" onclick="selecionarTodasEquipesFiltro()">
+                  <i class="fas fa-check-double"></i> Todas
+                </button>
+                <button class="filter-action-btn" onclick="limparEquipesFiltro()">
+                  <i class="fas fa-times"></i> Limpar
+                </button>
+              </div>
+              <div id="equipesChecklistPedidos" class="filter-checklist">
+                <!-- Checkboxes carregados via JS -->
+              </div>
+            </div>
           </div>
         </div>
+
+        <!-- Filtro de Solicitantes -->
+        <div class="filter-pill-wrapper">
+          <button class="filter-pill" id="btnFiltroSolicitantes" onclick="toggleDropdownFiltro('solicitantes')">
+            <i class="fas fa-user-friends"></i>
+            <span>Solicitantes</span>
+            <span class="filter-badge" id="badgeSolicitantes">0</span>
+            <i class="fas fa-chevron-down filter-arrow"></i>
+          </button>
+          <div class="filter-dropdown" id="dropdownSolicitantes" style="display: none;">
+            <div class="filter-dropdown-header">
+              <input type="text" class="filter-search" id="searchSolicitantes" placeholder="Buscar solicitante..." oninput="filtrarListaSolicitantes()">
+            </div>
+            <div class="filter-dropdown-body">
+              <div class="filter-actions">
+                <button class="filter-action-btn" onclick="selecionarTodosSolicitantesFiltro()">
+                  <i class="fas fa-check-double"></i> Todos
+                </button>
+                <button class="filter-action-btn" onclick="limparSolicitantesFiltro()">
+                  <i class="fas fa-times"></i> Limpar
+                </button>
+              </div>
+              <div id="solicitantesChecklistPedidos" class="filter-checklist">
+                <!-- Checkboxes carregados via JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtro de Categoria -->
+        <div class="filter-pill-wrapper">
+          <button class="filter-pill" id="btnFiltroCategoria" onclick="toggleDropdownFiltro('categoria')">
+            <i class="fas fa-tags"></i>
+            <span>Categoria</span>
+            <span class="filter-badge" id="badgeCategoria"></span>
+            <i class="fas fa-chevron-down filter-arrow"></i>
+          </button>
+          <div class="filter-dropdown" id="dropdownCategoria" style="display: none;">
+            <div class="filter-dropdown-body" style="padding: 0.5rem;">
+              <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                <label class="filter-status-item" style="display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+                  <input type="radio" name="filtroCategoria" value="" checked onchange="atualizarFiltroCategoria()" style="margin-right: 0.5rem;">
+                  <span style="font-size: 0.875rem;"><i class="fas fa-list"></i> Todas</span>
+                </label>
+                <label class="filter-status-item" style="display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+                  <input type="radio" name="filtroCategoria" value="facility" onchange="atualizarFiltroCategoria()" style="margin-right: 0.5rem;">
+                  <span style="font-size: 0.875rem;"><i class="fas fa-industry"></i> Facility</span>
+                </label>
+                <label class="filter-status-item" style="display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+                  <input type="radio" name="filtroCategoria" value="manipulacao" onchange="atualizarFiltroCategoria()" style="margin-right: 0.5rem;">
+                  <span style="font-size: 0.875rem;"><i class="fas fa-pills"></i> Manipulação</span>
+                </label>
+                <label class="filter-status-item" style="display: flex; align-items: center; padding: 0.5rem; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+                  <input type="radio" name="filtroCategoria" value="ambas" onchange="atualizarFiltroCategoria()" style="margin-right: 0.5rem;">
+                  <span style="font-size: 0.875rem;"><i class="fas fa-layer-group"></i> Ambas</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botão Limpar Todos os Filtros -->
+        <button class="filter-clear-all" onclick="limparTodosFiltros()" id="btnLimparTodosFiltros" style="display: none;">
+          <i class="fas fa-filter-circle-xmark"></i>
+          Limpar Filtros
+        </button>
       </div>
 
       <div class="card modern-card">
@@ -3154,6 +3564,18 @@
               </label>
               <small style="color: #6b7280; font-size: 0.85rem; margin-top: 0.5rem; display: block;">
                 <i class="fas fa-info-circle"></i> O usuário receberá emails sobre pedidos e atualizações
+              </small>
+            </div>
+            <div class="form-group modern-form-group" id="grupoPodeEditarEquipes" style="display: none;">
+              <label class="form-label">
+                <i class="fas fa-user-shield"></i> Pode Editar Equipes
+              </label>
+              <label class="switch">
+                <input type="checkbox" id="novoPodeEditarEquipes">
+                <span class="slider round"></span>
+              </label>
+              <small style="color: #6b7280; font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                <i class="fas fa-info-circle"></i> Permite que o usuário crie e edite informações de equipes (apenas Admin pode alterar)
               </small>
             </div>
           </div>
@@ -3733,7 +4155,7 @@
   </script>
   
   <script src="js/gestor-equipes-produtos.js?v=20260107d"></script>
-  <script src="js/gestor.js?v=20260107d"></script>
+  <script src="js/gestor.js?v=20260209a"></script>
   <script src="js/emails.js?v=20251204a"></script>
   <script src="js/emails.js?v=20251204a"></script>
   <script>

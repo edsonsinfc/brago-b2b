@@ -49,6 +49,11 @@ router.get('/', requireRole('admin', 'gestor'), async (req, res) => {
 
 router.post('/', requireRole('admin', 'gestor'), async (req, res) => {
   try {
+    // Verificar se o usuário tem permissão para editar equipes
+    if (req.user.perfil !== 'admin' && !req.user.pode_editar_equipes) {
+      return res.status(403).json({ error: 'Você não tem permissão para criar equipes' });
+    }
+    
     console.log('📦 POST /api/equipes - Body recebido:', JSON.stringify(req.body));
     console.log('👤 Usuário autenticado:', req.user);
     
@@ -86,6 +91,11 @@ router.post('/', requireRole('admin', 'gestor'), async (req, res) => {
 router.patch('/:id', requireRole('admin', 'gestor'), async (req, res) => {
   const { id } = req.params;
   const { nome, codigo_erp, cgc, limite_total, limite_mensal, status, vendedor_email } = req.body || {};
+  
+  // Verificar se o usuário tem permissão para editar equipes
+  if (req.user.perfil !== 'admin' && !req.user.pode_editar_equipes) {
+    return res.status(403).json({ error: 'Você não tem permissão para editar equipes' });
+  }
   
   console.log('📝 PATCH /api/equipes/' + id + ' - Body:', req.body);
   

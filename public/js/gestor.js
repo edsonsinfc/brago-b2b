@@ -9,13 +9,27 @@ window.handlePerfilChange = function(perfil) {
   const categoriaAcessoSelect = document.getElementById('novoCategoriaAcesso');
   const equipeSelect = document.getElementById('novoEquipe');
   const equipeObrigatorio = document.getElementById('equipeObrigatorio');
+  const grupoPodeEditarEquipes = document.getElementById('grupoPodeEditarEquipes');
   
   console.log('📦 Elementos encontrados:', {
     grupoCategoriaAcesso: !!grupoCategoriaAcesso,
     categoriaAcessoSelect: !!categoriaAcessoSelect,
     equipeSelect: !!equipeSelect,
-    equipeObrigatorio: !!equipeObrigatorio
+    equipeObrigatorio: !!equipeObrigatorio,
+    grupoPodeEditarEquipes: !!grupoPodeEditarEquipes
   });
+  
+  // Mostrar campo "Pode Editar Equipes" apenas se o usuário logado for admin
+  // Verificar se window.currentUserData existe (será definido após login)
+  if (grupoPodeEditarEquipes) {
+    if (window.currentUserData && window.currentUserData.perfil === 'admin') {
+      // Apenas admin vê este campo, e não para perfil admin sendo criado
+      grupoPodeEditarEquipes.style.display = (perfil === 'admin') ? 'none' : 'block';
+    } else {
+      // Não é admin, ocultar campo
+      grupoPodeEditarEquipes.style.display = 'none';
+    }
+  }
   
   if (perfil === 'solicitante') {
     console.log('✅ Perfil é solicitante - MOSTRANDO campo categoria');
@@ -1440,30 +1454,52 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
   });
   
   // === PEDIDOS ===
-  let pedidosState = { page: 1, pageSize: 100, status: '', totalPages: 1 };
+  let pedidosState = { page: 1, pageSize: 100, status: '', categoria: '', totalPages: 1 };
   let equipesGestor = []; // Equipes que o gestor pode gerenciar
   let equipesFiltradasPedidos = []; // Equipes selecionadas no filtro
+  let solicitantesFiltrados = []; // Solicitantes selecionados no filtro
+  let todosSolicitantes = []; // Todos os solicitantes disponíveis
   
   // Carregar equipes do gestor para o filtro
   async function carregarEquipesFiltro() {
+    console.log('🔄 [EQUIPES] Iniciando carregamento...');
     try {
       const userData = await api('/api/usuarios/me');
+      console.log('👤 [EQUIPES] Perfil:', userData.perfil);
       
-      if (userData.perfil === 'gestor' && userData.equipes && userData.equipes.length > 0) {
-        equipesGestor = userData.equipes;
-        
-        // Mostrar o card de filtro apenas para gestores
-        const filtroCard = $('#filtroEquipesPedidos');
-        if (filtroCard) {
-          filtroCard.style.display = 'block';
-        }
+      // Armazenar dados do usuário globalmente para uso em outras funções
+      window.currentUserData = userData;
+      
+      let equipes = [];
+      
+      // Admin pode ver todas as equipes, gestor vê apenas suas equipes
+      if (userData.perfil === 'admin') {
+        console.log('👑 [EQUIPES] Admin detectado - buscando todas as equipes via /api/equipes');
+        const equipesData = await api('/api/equipes');
+        equipes = equipesData.equipes || [];
+        console.log('✅ [EQUIPES] Equipes do admin (todas):', equipes.length);
+      } else if (userData.perfil === 'gestor' && userData.equipes && userData.equipes.length > 0) {
+        console.log('👔 [EQUIPES] Gestor detectado - usando equipes vinculadas');
+        equipes = userData.equipes;
+        console.log('✅ [EQUIPES] Equipes do gestor:', equipes.length);
+      }
+      
+      if (equipes.length > 0) {
+        equipesGestor = equipes;
+        console.log('✅ [EQUIPES] Equipes salvas em equipesGestor:', equipesGestor.length);
         
         // Renderizar checkboxes
         const container = $('#equipesChecklistPedidos');
+        console.log('📦 [EQUIPES] Container encontrado?', !!container);
+        
         if (container) {
           container.innerHTML = '';
+          console.log('🧹 [EQUIPES] Container limpo');
           
-          equipesGestor.forEach(equipe => {
+          console.log('📋 [EQUIPES] Renderizando', equipesGestor.length, 'equipes:');
+          
+          equipesGestor.forEach((equipe, idx) => {
+            console.log(`   ${idx + 1}. ${equipe.nome} (ID: ${equipe.id})`);
             const div = document.createElement('div');
             div.className = 'equipe-filtro-item';
             
@@ -1485,8 +1521,13 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
             container.appendChild(div);
           });
           
+          console.log('✅ [EQUIPES] Checkboxes adicionados ao container');
+          console.log('📊 [EQUIPES] Itens no container:', container.children.length);
+          
           // Carregar filtro salvo do localStorage, ou selecionar todas por padrão
           const filtroSalvo = localStorage.getItem('pedidos_equipes_filtro');
+          console.log('💾 [EQUIPES] Filtro salvo no localStorage:', filtroSalvo);
+          
           if (filtroSalvo) {
             try {
               equipesFiltradasPedidos = JSON.parse(filtroSalvo);
@@ -1508,10 +1549,15 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
             // Se não tem filtro salvo, selecionar todas por padrão
             selecionarTodasPorPadrao();
           }
+        } else {
+          console.error('❌ [EQUIPES] Container #equipesChecklistPedidos não encontrado!');
         }
+      } else {
+        console.log('⚠️ [EQUIPES] Nenhuma equipe disponível para o filtro');
+        console.log('   - Perfil:', userData.perfil);
       }
     } catch (error) {
-      console.error('Erro ao carregar equipes do gestor:', error);
+      console.error('❌ [EQUIPES] Erro ao carregar equipes:', error);
     }
   }
   
@@ -1520,6 +1566,7 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
     equipesFiltradasPedidos = equipesGestor.map(e => e.id);
     localStorage.setItem('pedidos_equipes_filtro', JSON.stringify(equipesFiltradasPedidos));
     atualizarContadorEquipes();
+    atualizarBadgeEquipes();
   }
   
   // Atualizar o filtro de equipes
@@ -1533,6 +1580,7 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
     localStorage.setItem('pedidos_equipes_filtro', JSON.stringify(equipesFiltradasPedidos));
     
     atualizarContadorEquipes();
+    atualizarBadgeEquipes(); // Nova UI
     carregarPedidos(); // Recarregar pedidos com o novo filtro
   }
   
@@ -1565,6 +1613,371 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
     atualizarFiltroEquipes();
   };
   
+  // === FILTRO DE SOLICITANTES ===
+  
+  // Toggle do filtro de solicitantes
+  window.toggleFiltroSolicitantes = function() {
+    const content = $('#solicitantesFilterContent');
+    const icon = $('#iconSolicitantesToggle');
+    
+    if (content && icon) {
+      const isVisible = content.style.display !== 'none';
+      content.style.display = isVisible ? 'none' : 'block';
+      icon.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+    }
+  };
+  
+  // Carregar solicitantes para o filtro
+  async function carregarSolicitantesFiltro() {
+    try {
+      // Buscar todos os usuários solicitantes (sem limite de paginação)
+      const data = await api('/api/usuarios?perfil=solicitante&ativo=1&pageSize=1000');
+      const solicitantes = (data.usuarios || []).filter(u => u.perfil === 'solicitante');
+      
+      console.log('✅ Solicitantes carregados para filtro:', solicitantes.length);
+      
+      if (solicitantes.length > 0) {
+        todosSolicitantes = solicitantes;
+        
+        // Mostrar o card de filtro
+        const filtroCard = $('#filtroSolicitantesPedidos');
+        if (filtroCard) {
+          filtroCard.style.display = 'block';
+        }
+        
+        // Renderizar checkboxes
+        const container = $('#solicitantesChecklistPedidos');
+        if (container) {
+          container.innerHTML = '';
+          
+          solicitantes.forEach(solicitante => {
+            const div = document.createElement('div');
+            div.className = 'solicitante-filtro-item';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `filtro_solicitante_${solicitante.id}`;
+            checkbox.value = solicitante.id;
+            checkbox.checked = true; // Por padrão, todos selecionados
+            checkbox.onchange = () => {
+              atualizarFiltroSolicitantes();
+            };
+            
+            const label = document.createElement('label');
+            label.htmlFor = `filtro_solicitante_${solicitante.id}`;
+            
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'solicitante-info';
+            
+            const nomeSpan = document.createElement('div');
+            nomeSpan.className = 'solicitante-nome';
+            nomeSpan.textContent = solicitante.nome;
+            
+            const equipeSpan = document.createElement('div');
+            equipeSpan.className = 'solicitante-equipe';
+            
+            // Buscar nomes das equipes do solicitante
+            if (solicitante.equipes && solicitante.equipes.length > 0) {
+              const equipesNomes = solicitante.equipes.map(e => e.nome).join(', ');
+              equipeSpan.textContent = equipesNomes;
+            } else {
+              equipeSpan.textContent = 'Sem equipe';
+            }
+            
+            infoDiv.appendChild(nomeSpan);
+            infoDiv.appendChild(equipeSpan);
+            label.appendChild(infoDiv);
+            
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            container.appendChild(div);
+          });
+          
+          // Carregar filtro salvo do localStorage, ou selecionar todos por padrão
+          const filtroSalvo = localStorage.getItem('pedidos_solicitantes_filtro');
+          if (filtroSalvo) {
+            try {
+              solicitantesFiltrados = JSON.parse(filtroSalvo);
+              // Desmarcar todos primeiro
+              const allCheckboxes = document.querySelectorAll('#solicitantesChecklistPedidos input[type=\"checkbox\"]');
+              allCheckboxes.forEach(cb => cb.checked = false);
+              // Marcar apenas os salvos
+              solicitantesFiltrados.forEach(id => {
+                const checkbox = $(`#filtro_solicitante_${id}`);
+                if (checkbox) checkbox.checked = true;
+              });
+              atualizarContadorSolicitantes();
+            } catch (e) {
+              console.error('Erro ao carregar filtro de solicitantes salvo:', e);
+              selecionarTodosSolicitantesPorPadrao();
+            }
+          } else {
+            selecionarTodosSolicitantesPorPadrao();
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar solicitantes:', error);
+    }
+  }
+  
+  // Função auxiliar para selecionar todos solicitantes por padrão
+  function selecionarTodosSolicitantesPorPadrao() {
+    solicitantesFiltrados = todosSolicitantes.map(s => s.id);
+    localStorage.setItem('pedidos_solicitantes_filtro', JSON.stringify(solicitantesFiltrados));
+    atualizarContadorSolicitantes();
+    atualizarBadgeSolicitantes();
+  }
+  
+  // Atualizar o filtro de solicitantes
+  function atualizarFiltroSolicitantes() {
+    const checkboxes = document.querySelectorAll('#solicitantesChecklistPedidos input[type=\"checkbox\"]');
+    solicitantesFiltrados = Array.from(checkboxes)
+      .filter(cb => cb.checked)
+      .map(cb => parseInt(cb.value));
+    
+    // Salvar no localStorage
+    localStorage.setItem('pedidos_solicitantes_filtro', JSON.stringify(solicitantesFiltrados));
+    
+    atualizarContadorSolicitantes();
+    atualizarBadgeSolicitantes(); // Nova UI
+    carregarPedidos(); // Recarregar pedidos com o novo filtro
+  }
+  
+  // Atualizar contador de solicitantes selecionados
+  function atualizarContadorSolicitantes() {
+    const contador = $('#solicitantesFiltradasCount');
+    if (contador) {
+      const total = todosSolicitantes.length;
+      const selecionados = solicitantesFiltrados.length;
+      
+      if (selecionados === 0) {
+        contador.textContent = `Todos os ${total} solicitantes (nenhum filtro aplicado)`;
+      } else if (selecionados === total) {
+        contador.textContent = 'Todos os solicitantes';
+      } else {
+        contador.textContent = `${selecionados} de ${total} solicitantes selecionados`;
+      }
+    }
+  }
+  
+  // Selecionar todos os solicitantes
+  window.selecionarTodosSolicitantesFiltro = function() {
+    const checkboxes = document.querySelectorAll('#solicitantesChecklistPedidos input[type=\"checkbox\"]');
+    checkboxes.forEach(cb => cb.checked = true);
+    atualizarFiltroSolicitantes();
+  };
+  
+  // Limpar filtro de solicitantes
+  window.limparSolicitantesFiltro = function() {
+    const checkboxes = document.querySelectorAll('#solicitantesChecklistPedidos input[type=\"checkbox\"]');
+    checkboxes.forEach(cb => cb.checked = false);
+    atualizarFiltroSolicitantes();
+  };
+
+  // === NOVA UI: CONTROLE DE DROPDOWNS COMPACTOS ===
+  
+  // Variável para controlar qual dropdown está aberto
+  let dropdownAbertoAtual = null;
+  
+  // Toggle de dropdown de filtro
+  window.toggleDropdownFiltro = function(tipo) {
+    const dropdown = $(`#dropdown${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+    const pill = $(`#btnFiltro${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+    
+    if (!dropdown || !pill) return;
+    
+    const estaAberto = dropdown.style.display !== 'none';
+    
+    // Fechar todos os dropdowns
+    document.querySelectorAll('.filter-dropdown').forEach(d => d.style.display = 'none');
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    
+    // Se não estava aberto, abre este
+    if (!estaAberto) {
+      dropdown.style.display = 'block';
+      pill.classList.add('active');
+      dropdownAbertoAtual = tipo;
+    } else {
+      dropdownAbertoAtual = null;
+    }
+  };
+  
+  // Fechar dropdown ao clicar fora
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.filter-pill-wrapper') && dropdownAbertoAtual) {
+      document.querySelectorAll('.filter-dropdown').forEach(d => d.style.display = 'none');
+      document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      dropdownAbertoAtual = null;
+    }
+  });
+  
+  // Filtrar lista de equipes (busca)
+  window.filtrarListaEquipes = function() {
+    const searchTerm = $('#searchEquipes')?.value.toLowerCase() || '';
+    const items = document.querySelectorAll('#equipesChecklistPedidos .equipe-filtro-item');
+    
+    items.forEach(item => {
+      const label = item.querySelector('label');
+      const text = label?.textContent.toLowerCase() || '';
+      item.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+    });
+  };
+  
+  // Filtrar lista de solicitantes (busca)
+  window.filtrarListaSolicitantes = function() {
+    const searchTerm = $('#searchSolicitantes')?.value.toLowerCase() || '';
+    const items = document.querySelectorAll('#solicitantesChecklistPedidos .solicitante-filtro-item');
+    
+    items.forEach(item => {
+      const label = item.querySelector('label');
+      const text = label?.textContent.toLowerCase() || '';
+      item.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+    });
+  };
+  
+  // Limpar todos os filtros
+  window.limparTodosFiltros = function() {
+    limparEquipesFiltro();
+    limparSolicitantesFiltro();
+    // Resetar status para "Todos"
+    const radioTodos = document.querySelector('input[name="filtroStatus"][value=""]');
+    if (radioTodos) radioTodos.checked = true;
+    atualizarFiltroStatus();
+    // Resetar categoria para "Todas"
+    const radioTodasCategorias = document.querySelector('input[name="filtroCategoria"][value=""]');
+    if (radioTodasCategorias) radioTodasCategorias.checked = true;
+    atualizarFiltroCategoria();
+  };
+  
+  // Atualizar filtro de status
+  window.atualizarFiltroStatus = function() {
+    const radioSelecionado = document.querySelector('input[name="filtroStatus"]:checked');
+    const badge = $('#badgeStatus');
+    const btnStatus = $('#btnFiltroStatus');
+    
+    if (radioSelecionado) {
+      pedidosState.status = radioSelecionado.value;
+      pedidosState.page = 1;
+      
+      // Salvar no localStorage
+      localStorage.setItem('pedidos_status_filtro', radioSelecionado.value);
+      
+      // Atualizar badge e estilo do pill
+      if (radioSelecionado.value === '') {
+        if (badge) badge.textContent = '';
+        if (btnStatus) btnStatus.classList.remove('active');
+      } else {
+        if (badge) badge.textContent = '1';
+        if (btnStatus) btnStatus.classList.add('active');
+      }
+      
+      atualizarBotaoLimparTodos();
+      carregarPedidos();
+    }
+  };
+  
+  // Atualizar filtro de categoria
+  window.atualizarFiltroCategoria = function() {
+    const radioSelecionado = document.querySelector('input[name="filtroCategoria"]:checked');
+    const badge = $('#badgeCategoria');
+    const btnCategoria = $('#btnFiltroCategoria');
+    
+    if (radioSelecionado) {
+      pedidosState.categoria = radioSelecionado.value;
+      pedidosState.page = 1;
+      
+      // Salvar no localStorage
+      localStorage.setItem('pedidos_categoria_filtro', radioSelecionado.value);
+      
+      // Atualizar badge e estilo do pill
+      if (radioSelecionado.value === '') {
+        if (badge) badge.textContent = '';
+        if (btnCategoria) btnCategoria.classList.remove('active');
+      } else {
+        if (badge) badge.textContent = '1';
+        if (btnCategoria) btnCategoria.classList.add('active');
+      }
+      
+      atualizarBotaoLimparTodos();
+      carregarPedidos();
+    }
+  };
+  
+  // Atualizar badge de equipes
+  function atualizarBadgeEquipes() {
+    const badge = $('#badgeEquipes');
+    if (badge) {
+      const total = equipesGestor.length;
+      const count = equipesFiltradasPedidos.length;
+      
+      // Só mostrar badge se não estiver "todos" selecionados
+      if (count > 0 && count < total) {
+        badge.textContent = count;
+      } else {
+        badge.textContent = '';
+      }
+      
+      // Mostrar/ocultar botão "Limpar Todos"
+      atualizarBotaoLimparTodos();
+    }
+  }
+  
+  // Atualizar badge de solicitantes
+  function atualizarBadgeSolicitantes() {
+    const badge = $('#badgeSolicitantes');
+    if (badge) {
+      const total = todosSolicitantes.length;
+      const count = solicitantesFiltrados.length;
+      
+      // Só mostrar badge se não estiver "todos" selecionados
+      if (count > 0 && count < total) {
+        badge.textContent = count;
+      } else {
+        badge.textContent = '';
+      }
+      
+      // Mostrar/ocultar botão "Limpar Todos"
+      atualizarBotaoLimparTodos();
+    }
+  }
+  
+  // Mostrar/ocultar botão "Limpar Todos os Filtros"
+  function atualizarBotaoLimparTodos() {
+    const btn = $('#btnLimparTodosFiltros');
+    if (btn) {
+      const totalEquipes = equipesGestor.length;
+      const totalSolicitantes = todosSolicitantes.length;
+      
+      // Filtro ativo apenas se NÃO estiver "todos" selecionados
+      const temFiltroEquipe = equipesFiltradasPedidos.length > 0 && equipesFiltradasPedidos.length < totalEquipes;
+      const temFiltroSolicitante = solicitantesFiltrados.length > 0 && solicitantesFiltrados.length < totalSolicitantes;
+      const temFiltroStatus = pedidosState.status !== '';
+      const temFiltroCategoria = pedidosState.categoria !== '';
+      
+      btn.style.display = (temFiltroEquipe || temFiltroSolicitante || temFiltroStatus || temFiltroCategoria) ? 'inline-flex' : 'none';
+    }
+  }
+  
+  // Mostrar barra de filtros se for gestor
+  // Mostrar barra de filtros se for gestor
+  async function mostrarFiltrosGestor() {
+    try {
+      const userData = await api('/api/usuarios/me');
+      
+      // Armazenar dados do usuário globalmente
+      window.currentUserData = userData;
+      
+      const filtrosBar = $('#filtrosAvancadosPedidos');
+      
+      if (filtrosBar && (userData.perfil === 'admin' || userData.perfil === 'gestor')) {
+        filtrosBar.style.display = 'flex';
+      }
+    } catch (error) {
+      console.error('Erro ao verificar perfil do usuário:', error);
+    }
+  }
+  
   async function carregarPedidos() {
     try {
       const params = new URLSearchParams({
@@ -1586,6 +1999,20 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
       if (equipesFiltradasPedidos.length > 0) {
         pedidosFiltrados = pedidosFiltrados.filter(pedido => 
           equipesFiltradasPedidos.includes(pedido.equipe_id)
+        );
+      }
+      
+      // Filtrar pedidos por solicitante se houver filtro aplicado
+      if (solicitantesFiltrados.length > 0) {
+        pedidosFiltrados = pedidosFiltrados.filter(pedido => 
+          solicitantesFiltrados.includes(pedido.criado_por)
+        );
+      }
+      
+      // Filtrar pedidos por categoria se houver filtro aplicado
+      if (pedidosState.categoria) {
+        pedidosFiltrados = pedidosFiltrados.filter(pedido => 
+          pedido.solicitante_categoria === pedidosState.categoria
         );
       }
       
@@ -1665,11 +2092,22 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
     const dataFormatada = formatDate(pedido.data);
     const valorFormatado = formatMoney(pedido.valor_total);
     
+    // Determinar badge de categoria
+    let categoriaBadge = '';
+    if (pedido.solicitante_categoria === 'facility') {
+      categoriaBadge = '<span class="categoria-badge facility" title="Facility"><i class="fas fa-industry"></i> Facility</span>';
+    } else if (pedido.solicitante_categoria === 'manipulacao') {
+      categoriaBadge = '<span class="categoria-badge manipulacao" title="Manipulação"><i class="fas fa-pills"></i> Manipulação</span>';
+    } else if (pedido.solicitante_categoria === 'ambas') {
+      categoriaBadge = '<span class="categoria-badge ambas" title="Ambas"><i class="fas fa-layer-group"></i> Ambas</span>';
+    }
+    
     card.innerHTML = `
       <div class="pedido-card-header">
         <div class="pedido-id">
           <i class="fas fa-hashtag"></i>
           ${pedido.id}
+          ${categoriaBadge}
         </div>
         <div class="pedido-main-info">
           <div class="pedido-equipe">${escapeHtml(pedido.equipe_nome || '#' + pedido.equipe_id)}</div>
@@ -2278,6 +2716,24 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
                 <span class="slider round"></span>
               </label>
             </div>
+            
+            <div class="usuario-form-group" id="grupoPodeEditarEquipes-${usuario.id}" style="${window.currentUserData && window.currentUserData.perfil === 'admin' ? 'display: block;' : 'display: none;'}">
+              <label class="usuario-form-label">
+                <i class="fas fa-user-shield"></i>
+                Pode Editar Equipes
+              </label>
+              <label class="switch">
+                <input type="checkbox" 
+                       data-id="${usuario.id}" 
+                       data-field="pode_editar_equipes" 
+                       ${usuario.pode_editar_equipes ? 'checked' : ''}
+                       onchange="togglePodeEditarEquipes(${usuario.id}, this.checked)">
+                <span class="slider round"></span>
+              </label>
+              <small style="color: #6b7280; font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                <i class="fas fa-info-circle"></i> Permite que este usuário crie e edite equipes
+              </small>
+            </div>
           </div>
           
           <div class="usuario-form-group" style="margin-top: 1rem;">
@@ -2635,6 +3091,28 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
       // Reverter o checkbox em caso de erro
       const checkbox = document.querySelector(`input[data-id="${id}"][data-field="recebe_email_notificacao"]`);
       if (checkbox) checkbox.checked = !recebe;
+    }
+  };
+  
+  window.togglePodeEditarEquipes = async function(id, pode) {
+    try {
+      console.log(`🔄 Toggle pode editar equipes - ID: ${id}, Pode: ${pode}`);
+      
+      const result = await api(`/api/usuarios/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pode_editar_equipes: pode })
+      });
+      
+      console.log('✅ Resposta da API:', result);
+      
+      showMessage(`Permissão para editar equipes ${pode ? 'concedida' : 'removida'} com sucesso!`);
+    } catch (error) {
+      console.error('❌ Erro ao atualizar permissão:', error);
+      showMessage('Erro ao atualizar permissão: ' + error.message, 'error');
+      // Reverter o checkbox em caso de erro
+      const checkbox = document.querySelector(`input[data-id="${id}"][data-field="pode_editar_equipes"]`);
+      if (checkbox) checkbox.checked = !pode;
     }
   };
 
@@ -3859,18 +4337,60 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
       }, 500);
     });
     
-    // Listener para filtro de status de pedidos
-    const filtroStatus = $('#selFiltroStatus');
-    if (filtroStatus) {
-      filtroStatus.addEventListener('change', (e) => {
-        pedidosState.status = e.target.value;
-        pedidosState.page = 1; // Voltar para primeira página
-        carregarPedidos();
-      });
-    }
-    
     // Carregar filtro de equipes para pedidos
     carregarEquipesFiltro();
+    
+    // Carregar filtro de solicitantes para pedidos
+    carregarSolicitantesFiltro();
+    
+    // Restaurar filtro de status salvo
+    const statusSalvo = localStorage.getItem('pedidos_status_filtro');
+    if (statusSalvo) {
+      const radioStatus = document.querySelector(`input[name="filtroStatus"][value="${statusSalvo}"]`);
+      if (radioStatus) {
+        radioStatus.checked = true;
+        pedidosState.status = statusSalvo;
+        
+        // Atualizar badge
+        const badge = $('#badgeStatus');
+        const btnStatus = $('#btnFiltroStatus');
+        if (statusSalvo === '') {
+          if (badge) badge.textContent = '';
+          if (btnStatus) btnStatus.classList.remove('active');
+        } else {
+          if (badge) badge.textContent = '1';
+          if (btnStatus) btnStatus.classList.add('active');
+        }
+      }
+    }
+    
+    // Restaurar filtro de categoria salvo
+    const categoriaSalva = localStorage.getItem('pedidos_categoria_filtro');
+    if (categoriaSalva) {
+      const radioCategoria = document.querySelector(`input[name="filtroCategoria"][value="${categoriaSalva}"]`);
+      if (radioCategoria) {
+        radioCategoria.checked = true;
+        pedidosState.categoria = categoriaSalva;
+        
+        // Atualizar badge
+        const badge = $('#badgeCategoria');
+        const btnCategoria = $('#btnFiltroCategoria');
+        if (categoriaSalva === '') {
+          if (badge) badge.textContent = '';
+          if (btnCategoria) btnCategoria.classList.remove('active');
+        } else {
+          if (badge) badge.textContent = '1';
+          if (btnCategoria) btnCategoria.classList.add('active');
+        }
+      }
+    }
+    
+    // Mostrar barra de filtros (agora para todos os perfis, pois tem filtro de status)
+    const filtrosBar = $('#filtrosAvancadosPedidos');
+    if (filtrosBar) {
+      filtrosBar.style.display = 'flex';
+      console.log('✅ Barra de filtros exibida');
+    }
     
     // Fechar modal ao clicar fora (com verificações de null)
     const modalEditarProduto = $('#modalEditarProduto');
@@ -3923,6 +4443,7 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
             equipes_ids: equipes_ids.length > 0 ? equipes_ids : null,
             categoria_acesso: categoria_acesso,
             recebe_email_notificacao: $('#novoRecebeEmail').checked,
+            pode_editar_equipes: $('#novoPodeEditarEquipes') ? $('#novoPodeEditarEquipes').checked : false,
             ativo: true
           };
           
