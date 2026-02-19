@@ -108,7 +108,13 @@ router.get('/galeria', async (req, res) => {
       const offset = (pageNum - 1) * pageSizeNum;
       
       const [produtos] = await pool.execute(`
-        SELECT * FROM produtos p
+        SELECT p.*,
+        (
+          SELECT GROUP_CONCAT(DISTINCT pe2.equipe_id)
+          FROM produtos_equipes_especificas pe2
+          WHERE pe2.produto_id = p.id
+        ) as equipes_com_acesso
+        FROM produtos p
         ${whereClause}
         ORDER BY p.descricao
         LIMIT ? OFFSET ?
@@ -155,7 +161,13 @@ router.get('/galeria', async (req, res) => {
     // 1. Produtos com acesso_especifico = 0 (disponíveis para todos)
     // 2. Produtos com acesso_especifico = 1 que estão vinculados às equipes do usuário
     const query = `
-      SELECT DISTINCT p.* 
+      SELECT DISTINCT 
+        p.*,
+        (
+          SELECT GROUP_CONCAT(DISTINCT pe2.equipe_id)
+          FROM produtos_equipes_especificas pe2
+          WHERE pe2.produto_id = p.id
+        ) as equipes_com_acesso
       FROM produtos p
       LEFT JOIN produtos_equipes_especificas pe ON p.id = pe.produto_id
       ${whereClause}
@@ -163,6 +175,7 @@ router.get('/galeria', async (req, res) => {
         p.acesso_especifico = 0
         OR (p.acesso_especifico = 1 AND pe.equipe_id IN (${equipesIds.length > 0 ? equipesIds.join(',') : '0'}))
       )
+      GROUP BY p.id
       ORDER BY p.descricao
       LIMIT ? OFFSET ?
     `;
@@ -176,6 +189,18 @@ router.get('/galeria', async (req, res) => {
     const [produtos] = await pool.execute(query, params);
     
     console.log(`✅ Retornando ${produtos.length} produtos para galeria`);
+    
+    // DEBUG: Verificar o produto ID 42 (Rexona)
+    const produtoRexona = produtos.find(p => p.id === 42);
+    if (produtoRexona) {
+      console.log('🔍 DEBUG - Produto Rexona antes de enviar:', {
+        id: produtoRexona.id,
+        codprod: produtoRexona.codprod,
+        acesso_especifico: produtoRexona.acesso_especifico,
+        equipes_com_acesso: produtoRexona.equipes_com_acesso,
+        equipes_com_acesso_tipo: typeof produtoRexona.equipes_com_acesso
+      });
+    }
     
     res.json({
       produtos,
@@ -231,17 +256,16 @@ router.get('/', async (req, res) => {
       // 1. Produtos OBA (cont_oba = 'S') com categoria correta
       // 2. Produtos com acesso_especifico = 0 com categoria correta
       // 3. Produtos com acesso_especifico = 1 vinculados às equipes do usuário
-      // IMPORTANTE: O filtro de categoria deve ser aplicado em TODAS as condições,
-      // não apenas nos produtos OBA, para evitar que produtos de outra categoria
-      // sejam exibidos via acesso_especifico = 0
+      // IMPORTANTE: O filtro de acesso_especifico deve ser combinado com o filtro de categoria
+      // para que produtos restritos a equipes específicas NÃO apareçam para todas as equipes
       if (categoriaFilter) {
         whereClause += ` AND (
-          (${categoriaFilter})
+          (${categoriaFilter} AND (p.acesso_especifico = 0 OR p.acesso_especifico IS NULL))
           OR (p.acesso_especifico = 1 AND pe.equipe_id IN (${equipesIds.length > 0 ? equipesIds.join(',') : '0'}))
         )`;
       } else {
         whereClause += ` AND (
-          p.acesso_especifico = 0
+          (p.acesso_especifico = 0 OR p.acesso_especifico IS NULL)
           OR (p.acesso_especifico = 1 AND pe.equipe_id IN (${equipesIds.length > 0 ? equipesIds.join(',') : '0'}))
         )`;
       }

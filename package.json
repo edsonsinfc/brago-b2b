@@ -8,7 +8,10 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "migrate": "node scripts/migrate.js",
-    "seed:admin": "node scripts/seed_admin.js"
+    "seed:admin": "node scripts/seed_admin.js",
+    "backup": "node scripts/backup-database.js",
+    "prepare-migration": "node scripts/prepare-migration.js",
+    "deploy": "node scripts/deploy-hostinger.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

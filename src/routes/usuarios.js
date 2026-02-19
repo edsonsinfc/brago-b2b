@@ -81,7 +81,7 @@ router.use(authenticate, requireRole('admin', 'gestor'));
 // Listar usuários (com filtros opcionais)
 router.get('/', async (req, res) => {
   try {
-    const { perfil, ativo, q } = req.query || {};
+    const { perfil, ativo, q, equipe_id, categoria_acesso } = req.query || {};
     let page = parseInt(req.query.page || '1', 10);
     let pageSize = parseInt(req.query.pageSize || '20', 10);
     if (!Number.isFinite(page) || page < 1) page = 1;
@@ -93,6 +93,13 @@ router.get('/', async (req, res) => {
     if (perfil) { where.push('u.perfil = ?'); vals.push(perfil); }
     if (ativo !== undefined) { where.push('u.ativo = ?'); vals.push(ativo === '1' || ativo === 'true' ? 1 : 0); }
     if (q) { where.push('(u.nome LIKE ? OR u.email LIKE ?)'); vals.push(`%${q}%`, `%${q}%`); }
+    if (categoria_acesso) { where.push('u.categoria_acesso = ?'); vals.push(categoria_acesso); }
+    
+    // Filtrar por equipe específica
+    if (equipe_id) {
+      where.push('EXISTS (SELECT 1 FROM usuarios_equipes ue WHERE ue.usuario_id = u.id AND ue.equipe_id = ?)');
+      vals.push(parseInt(equipe_id));
+    }
     
     // Gestor só vê usuários das suas equipes
     if (req.user && req.user.perfil === 'gestor') {

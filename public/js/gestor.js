@@ -2551,12 +2551,16 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
       
       if (usuariosState.search) params.set('q', usuariosState.search);
       if (usuariosState.perfil) params.set('perfil', usuariosState.perfil);
+      if (usuariosState.categoria) params.set('categoria_acesso', usuariosState.categoria);
+      if (usuariosState.equipe) params.set('equipe_id', usuariosState.equipe);
       
       console.log('🔍 ESTADO DE BUSCA:', {
         page: usuariosState.page,
         pageSize: usuariosState.pageSize,
         search: usuariosState.search,
         perfil: usuariosState.perfil,
+        categoria: usuariosState.categoria,
+        equipe: usuariosState.equipe,
         url: `/api/usuarios?${params}`
       });
       
@@ -2792,6 +2796,21 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
       equipesCache = data.equipes || [];
       
       console.log('✅ Equipes recebidas da API:', equipesCache.length);
+      
+      // Popular select de filtro de equipes
+      const selectFiltroEquipe = $('#selFiltroEquipe');
+      if (selectFiltroEquipe) {
+        const valorAtual = selectFiltroEquipe.value;
+        selectFiltroEquipe.innerHTML = '<option value="">(todas as equipes)</option>';
+        equipesCache.forEach(equipe => {
+          const option = document.createElement('option');
+          option.value = equipe.id;
+          option.textContent = equipe.nome;
+          selectFiltroEquipe.appendChild(option);
+        });
+        // Restaurar seleção anterior se existir
+        if (valorAtual) selectFiltroEquipe.value = valorAtual;
+      }
       
       // Atualizar checkboxes do formulário de novo usuário
       const checkboxesContainer = $('#usuariosEquipesCheckboxes');
@@ -3064,6 +3083,8 @@ console.log('✅ window.handlePerfilChange definida!', typeof window.handlePerfi
   window.buscarUsuarios = function() {
     usuariosState.search = $('#usrBusca').value;
     usuariosState.perfil = $('#selFiltroPerfil').value;
+    usuariosState.categoria = $('#selFiltroCategoria').value;
+    usuariosState.equipe = $('#selFiltroEquipe').value;
     usuariosState.page = 1;
     carregarUsuarios();
   };

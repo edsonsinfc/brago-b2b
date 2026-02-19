@@ -76,6 +76,7 @@
   let state = {
     produtos: [],
     produtosFiltrados: [],
+    equipes: [],
     userPerfil: null,
     userNome: null,
     userCategoriaAcesso: null,
@@ -86,7 +87,8 @@
     filters: {
       searchTerm: '',
       categoriaAcesso: '',
-      estoque: ''
+      estoque: '',
+      equipe: ''
     }
   };
 
@@ -275,6 +277,34 @@
       });
     }
     
+    // Filtro de equipe/loja
+    if (state.filters.equipe) {
+      const equipeId = parseInt(state.filters.equipe);
+      console.log('🔍 Filtro de equipe ativado:', equipeId);
+      
+      filtrados = filtrados.filter(p => {
+        console.log(`Produto: ${p.descricao}, acesso_especifico: ${p.acesso_especifico}, equipes_com_acesso:`, p.equipes_com_acesso);
+        
+        // Se o produto não tem acesso específico, está disponível para todos
+        if (!p.acesso_especifico) {
+          console.log(`  ✅ Produto disponível para todos (acesso_especifico = 0)`);
+          return true;
+        }
+        
+        // Se tem acesso específico, verificar se a equipe tem acesso
+        if (p.equipes_com_acesso && Array.isArray(p.equipes_com_acesso)) {
+          const temAcesso = p.equipes_com_acesso.includes(equipeId);
+          console.log(`  ${temAcesso ? '✅' : '❌'} Equipe ${equipeId} ${temAcesso ? 'TEM' : 'NÃO TEM'} acesso`);
+          return temAcesso;
+        }
+        
+        console.log(`  ❌ Sem array de equipes`);
+        return false;
+      });
+      
+      console.log(`📊 Após filtro de equipe: ${filtrados.length} produtos`);
+    }
+    
     state.produtosFiltrados = filtrados;
     renderProdutos(filtrados);
     atualizarFilterPills();
@@ -316,6 +346,16 @@
       });
     }
     
+    if (state.filters.equipe) {
+      const equipe = state.equipes.find(e => e.id === parseInt(state.filters.equipe));
+      if (equipe) {
+        pills.push({
+          label: `<i class="fas fa-store"></i> ${equipe.nome}`,
+          filter: 'equipe'
+        });
+      }
+    }
+    
     if (pills.length > 0) {
       pillsContainer.style.display = 'flex';
       btnClear.style.display = 'inline-flex';
@@ -340,6 +380,8 @@
             $('#categoriaAcessoFilter').value = '';
           } else if (filter === 'estoque') {
             $('#estoqueFilter').value = '';
+          } else if (filter === 'equipe') {
+            $('#equipeFilter').value = '';
           }
           
           filtrarProdutos();
@@ -356,16 +398,38 @@
     state.filters = {
       searchTerm: '',
       categoriaAcesso: '',
-      estoque: ''
+      estoque: '',
+      equipe: ''
     };
     
     $('#searchInput').value = '';
     $('#categoriaAcessoFilter').value = '';
     $('#estoqueFilter').value = '';
+    $('#equipeFilter').value = '';
     
     filtrarProdutos();
   }
 
+  // Carregar equipes
+  async function carregarEquipes() {
+    try {
+      const data = await api('/api/equipes');
+      state.equipes = data.equipes || data;
+      
+      // Preencher select de equipes
+      const select = $('#equipeFilter');
+      if (select && state.equipes.length > 0) {
+        state.equipes.forEach(equipe => {
+          const option = document.createElement('option');
+          option.value = equipe.id;
+          option.textContent = equipe.nome;
+          select.appendChild(option);
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao carregar equipes:', error);
+    }
+  }
 
   // Carregar produtos
   async function carregarProdutos() {
@@ -389,6 +453,15 @@
         console.error('❌ Produtos não é um array:', state.produtos);
         throw new Error('Formato de resposta inválido');
       }
+      
+      // Processar equipes_com_acesso para array
+      state.produtos.forEach(p => {
+        if (p.equipes_com_acesso) {
+          p.equipes_com_acesso = p.equipes_com_acesso.split(',').map(id => parseInt(id));
+        } else {
+          p.equipes_com_acesso = [];
+        }
+      });
       
       state.produtosFiltrados = state.produtos;
       filtrarProdutos();
@@ -548,12 +621,18 @@ ${produto.observacoes ? `\nObservações: ${produto.observacoes}` : ''}
       filtrarProdutos();
     });
     
+    $('#equipeFilter')?.addEventListener('change', (e) => {
+      state.filters.equipe = e.target.value;
+      filtrarProdutos();
+    });
+    
     $('#btnClearFilters')?.addEventListener('click', limparFiltros);
     
     $('#btnGridView')?.addEventListener('click', () => toggleViewMode('grid'));
     $('#btnListView')?.addEventListener('click', () => toggleViewMode('list'));
     
-    // Carregar produtos
+    // Carregar equipes e produtos
+    await carregarEquipes();
     await carregarProdutos();
   });
   

@@ -131,7 +131,7 @@
 
     .search-and-filters {
       display: grid;
-      grid-template-columns: 2fr 1fr 1fr;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
       gap: 1rem;
     }
 
@@ -545,7 +545,7 @@
     /* Responsive */
     @media (max-width: 1200px) {
       .search-and-filters {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
       }
     }
 
@@ -684,6 +684,16 @@
               <option value="sem-estoque">Sem Estoque</option>
             </select>
           </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fas fa-store"></i>
+              Loja/Equipe
+            </label>
+            <select class="form-select" id="equipeFilter">
+              <option value="">Todas as Lojas</option>
+            </select>
+          </div>
         </div>
 
         <div class="form-group" style="align-self: end;">
@@ -748,6 +758,6 @@
     })();
   </script>
 
-  <script src="/js/galeria.js?v=20260209e"></script>
+  <script src="/js/galeria.js?v=20260209h"></script>
 </body>
 </html>
