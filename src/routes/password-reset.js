@@ -1,6 +1,6 @@
 const express = require('express');
 const pool = require('../config/db.mysql');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const emailService = require('../services/emailService');
 

@@ -27,7 +27,7 @@ async function checkAdminUsers() {
       console.log('❌ NENHUM ADMINISTRADOR ENCONTRADO!');
       console.log('\n💡 Criando usuário administrador padrão...\n');
       
-      const bcrypt = require('bcrypt');
+      const bcrypt = require('bcryptjs');
       const senhaHash = await bcrypt.hash('admin123', 10);
       
       await connection.execute(`
