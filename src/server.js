@@ -87,8 +87,8 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('? Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`?? B2B Brago Distribuidora rodando em:`);
+const server = app.listen(PORT, () => {
+  console.log(`✅ B2B Brago Distribuidora rodando na porta ${PORT}`);
   console.log(`   - http://localhost:${PORT}`);
   console.log(`   - http://10.2.4.13:${PORT}`);
   console.log(`   Escutando em todas as interfaces de rede (0.0.0.0:${PORT})`);  
