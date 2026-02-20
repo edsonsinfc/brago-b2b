@@ -47,8 +47,8 @@ router.post('/login', async (req, res) => {
     });
   } catch (e) {
     console.error('Erro login:', e);
-    // Temporariamente retornando o erro real para facilitar o debug na Hostinger
-    res.status(500).json({ error: `Erro Interno: ${e.message}`, stack: e.stack });
+    // Temporariamente retornando o erro real com status 400 para BYPASSAR a tela HTML do Nginx da Hostinger
+    res.status(400).json({ error: `Erro Interno: ${e.message}`, stack: e.stack });
   }
 });
 
